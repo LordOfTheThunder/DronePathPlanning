@@ -12,7 +12,7 @@ waypoint_config = {
     "File Name" : "path_planning.waypoints",
     "First Row" : "QGC WPL",
     "Version" : "110",
-    "Start Point" : [30, 30],
+    "Start Point" : [31.323287, 34.299660],
     "Commands" : {
         "WAYPOINT" : 16,
         "RETURN_TO_LAUNCH" : 20
