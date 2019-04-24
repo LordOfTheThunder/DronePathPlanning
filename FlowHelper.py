@@ -11,3 +11,10 @@ def getSensorPointsFromCsv():
     fh.close()
 
     return [sensor_coords, sensor_coords_with_radius]
+
+def getStartPointFromCsv():
+    file = global_config["Start Point CSV"]
+    with open(file, 'r') as fh:
+        point = [float(x) for x in fh.readline().split(',')]
+    fh.close()
+    return point

@@ -1,8 +1,8 @@
-from MainConfig import waypoint_config, global_config
+from MainConfig import waypoint_config, logger, path_plans_config
 import pandas as pd
 import csv
 
-def createWaypointFile(point_list):
+def createWaypointFile(start_point, point_list):
     column_names = waypoint_config["Columns"]
     columns = column_names.split(' ')
     first_row = waypoint_config["First Row"].split(' ')
@@ -45,19 +45,25 @@ def createWaypointFile(point_list):
 
     # Add first point - point of HOME
     first_point = [1, 0, waypoint_config["Commands"]["WAYPOINT"], 0, 0, 0, 0,
-                   global_config["Start Point"][0], global_config["Start Point"][1],
+                   start_point[0], start_point[1],
                    waypoint_config["Default Alt"], 1]
     data = createWaypointRowMap(first_point)
+
     # Build other points according to path plan
-    for point in point_list:
-        point_data = [0, waypoint_config["Default Coord Frame"], waypoint_config["Commands"]["WAYPOINT"],
-                      0, 0, 0, 0, point[0], point[1], waypoint_config["Default Alt"], 1]
-        data = appendToWaypointRowMap(data, point_data)
-    # Add last point - return to launch
-    last_point = [0, waypoint_config["Default Coord Frame"],
-                                       waypoint_config["Commands"]["RETURN_TO_LAUNCH"],
-                                       0, 0, 0, 0, 0, 0, 0, 1]
-    data = appendToWaypointRowMap(data, last_point)
+    if waypoint_config["Default Path Plan"] == path_plans_config["Follow Points"]:
+        for point in point_list:
+            point_data = [0, waypoint_config["Default Coord Frame"], waypoint_config["Commands"]["WAYPOINT"],
+                          0, 0, 0, 0, point[0], point[1], waypoint_config["Default Alt"], 1]
+            data = appendToWaypointRowMap(data, point_data)
+        # Add last point - return to launch
+        last_point = [0, waypoint_config["Default Coord Frame"],
+                                           waypoint_config["Commands"]["RETURN_TO_LAUNCH"],
+                                           0, 0, 0, 0, 0, 0, 0, 1]
+        data = appendToWaypointRowMap(data, last_point)
+    else:
+        logger.error("No plan by name " + waypoint_config["Default Path Plan"] +" exists")
+        exit(1)
     df = pd.DataFrame(data)
     # Write all to csv
     df.to_csv(waypoint_config["File Name"], sep='\t', header=False, mode='a')
+    logger.info('Generated Waypoint File at ' + waypoint_config["File Name"])

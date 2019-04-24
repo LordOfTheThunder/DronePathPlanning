@@ -1,21 +1,6 @@
 # Generate HTML file
 # Generate js files with configs after getting input from path planning
-from MainConfig import simulation_config, global_config
-import logging
-
-logger = logging.getLogger()
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-logger.setLevel(logging.DEBUG)
-
-fh = logging.FileHandler('log_filename.txt')
-fh.setLevel(logging.DEBUG)
-fh.setFormatter(formatter)
-logger.addHandler(fh)
-
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+from MainConfig import simulation_config, logger
 
 def generateHTMLFile():
     html_path = simulation_config["Relative Path"] + simulation_config["HTML File"]
@@ -34,9 +19,8 @@ def generateHTMLFile():
     fh.close()
     logger.info('Generated HTML File at ' + html_path)
 
-def generateStartPointFile():
+def generateStartPointFile(start_point):
     start_point_path = simulation_config["Relative Path"] + simulation_config["Start Point File"]
-    start_point = global_config["Start Point"]
     with open(start_point_path, 'w') as fh:
         fh.write("start_point = " + "\"" + str(start_point[0]) + "," + str(start_point[1]) + ",0" + "\"")
     fh.close()

@@ -1,3 +1,5 @@
+import logging
+
 """
 Different plans we might decide for our drone
 Follow Points : follow points in order and then return to base
@@ -30,6 +32,21 @@ simulation_config = {
 }
 
 global_config = {
-    "Start Point" : [31.323287, 34.299660],
+    "Start Point CSV" : "start_point.csv",
     "Sensor Point CSV" : "sensor_positions.csv",
 }
+
+# Logger for the debug logs
+logger = logging.getLogger()
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+logger.setLevel(logging.DEBUG)
+
+fh = logging.FileHandler('path_planning_log.txt')
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatter)
+logger.addHandler(fh)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
