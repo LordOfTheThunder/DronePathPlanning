@@ -70,7 +70,9 @@ function translateCoordinates() {
 			var new_x = (x - leftmost) / (rightmost - leftmost) * sub_width + (width - sub_width) / 2;
 			var new_y = (y - bottommost) / (topmost - bottommost) * sub_height + (height - sub_height) / 2;
 			if (splitted_point.length == 3) {
-				translated_points.push([new_x, new_y, splitted_point[2]]);
+				var radius = parseFloat(splitted_point[2], 10);
+				var new_radius = radius / (rightmost - leftmost) * sub_width;
+				translated_points.push([new_x, new_y, new_radius]);
 			} else {
 				translated_points.push([new_x, new_y]);
 			}
@@ -118,7 +120,7 @@ function drawSensors() {
 	ctx.beginPath();
 	ctx.font = "bold 12px Arial";
 	var split_coord = sensor_point_list[i - 1].split(",");
-	ctx.fillText("(" + split_coord[0] + "," + split_coord[1] + ")", translated_coordinate[0], translated_coordinate[1]);
+	ctx.fillText("(" + split_coord[1] + "," + split_coord[0] + ")", translated_coordinate[0], translated_coordinate[1]);
 	  
 	ctx.restore();
   }
@@ -145,7 +147,7 @@ function drawStartPoint() {
   ctx.beginPath();
   ctx.font = "bold 12px Arial";
   var split_start_point = start_point.split(",");
-  ctx.fillText("(" + split_start_point[0] + "," + split_start_point[1] + ")", translated_start_point[0], translated_start_point[1]);
+  ctx.fillText("(" + split_start_point[1] + "," + split_start_point[0] + ")", translated_start_point[0], translated_start_point[1]);
   
   ctx.restore();
 }
