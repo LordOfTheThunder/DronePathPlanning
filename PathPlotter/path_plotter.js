@@ -15,12 +15,13 @@ function init() {
 	drawSensors();
 	// Draw path animation - path1.path
 	startAnimating(fps);
+	// Increase width to see points
 }
 
 function initCanvas() {
 	var c = document.getElementById("myCanvas");
-	c.width = document.body.clientWidth;
-	c.height = document.body.clientHeight;
+	c.width = document.body.clientWidth / 2;
+	c.height = c.width;
 	width = c.width;
 	height = c.height;
 }
@@ -34,7 +35,7 @@ function translateCoordinates() {
 	
 	// path_points hold the locations of the path (2d point)
 	var full_path_points = start_point.concat(" ");
-	full_path_points = full_path_points.concat(sensor_points);
+	full_path_points = full_path_points.concat(path_points);
 	full_path_points = full_path_points.concat(" ");
 	full_path_points = full_path_points.concat(start_point);
 	path_list = full_path_points.split(" ");
@@ -44,8 +45,8 @@ function translateCoordinates() {
 		for (var i = 0; i < points_list.length; i++) {
 			var point = points_list[i];
 			var splitted_point = point.split(",");
-			var x = parseFloat(splitted_point[0], 10);
-			var y = parseFloat(splitted_point[1], 10);
+			var x = parseFloat(splitted_point[1], 10);
+			var y = parseFloat(splitted_point[0], 10);
 			var radius = parseFloat(splitted_point[2], 10);
 			rightmost = Math.max(rightmost, x + radius);
 			leftmost = Math.min(leftmost, x - radius);
@@ -61,8 +62,8 @@ function translateCoordinates() {
 		for (var i = 0; i < points_list.length; i++) {
 			var point = points_list[i];
 			var splitted_point = point.split(",");
-			var x = parseFloat(splitted_point[0], 10);
-			var y = parseFloat(splitted_point[1], 10);
+			var x = parseFloat(splitted_point[1], 10);
+			var y = parseFloat(splitted_point[0], 10);
 			// Sub rect - smaller than width,height rect
 			sub_width = width * 0.8;
 			sub_height = height * 0.8;

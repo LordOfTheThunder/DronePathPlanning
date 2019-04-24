@@ -45,7 +45,7 @@ def travelingSalesman(start_point, point_list):
     def heuristicTravelingSalesman(start_point, point_list):
         curr_point = start_point
         while point_list:
-            point_dist_list = ([point, euclideanDist(curr_point, point)] for point in point_list)
+            point_dist_list = [[point, euclideanDist(curr_point, point)] for point in point_list]
             closest_point = min(point_dist_list, key=itemgetter(1))[0]
             point_list.remove(closest_point)
             curr_point = closest_point

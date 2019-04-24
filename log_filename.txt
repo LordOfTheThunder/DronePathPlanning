@@ -32,3 +32,52 @@
 2019-04-24 16:56:01,838 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
 2019-04-24 16:56:01,838 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
 2019-04-24 16:56:01,839 - INFO - Generated Path File at ./PathPlotter/path1.path.js
+2019-04-24 17:45:52,337 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:45:52,338 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:45:52,341 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:45:52,342 - INFO - Generated Path File at ./PathPlotter/path1.path.js
+2019-04-24 17:45:56,867 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:45:56,868 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:45:56,869 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:46:27,589 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:46:27,590 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:46:27,593 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:46:27,594 - INFO - Generated Path File at ./PathPlotter/path1.path.js
+2019-04-24 17:47:09,835 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:47:09,836 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:47:09,837 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:47:21,782 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:47:21,783 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:47:21,784 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:48:06,666 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:48:06,668 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:48:06,668 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:49:58,650 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:49:58,651 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:49:58,653 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:51:58,965 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:51:58,966 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:51:58,967 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:51:58,968 - INFO - Generated Path File at ./PathPlotter/path1.path.js
+2019-04-24 17:54:12,117 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:54:12,118 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:54:12,119 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:54:40,669 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:54:40,670 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:54:40,671 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:55:56,922 - INFO - Generated Path File at ./PathPlotter/path1.path.js
+2019-04-24 17:56:07,301 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:56:07,302 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:56:07,303 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:56:18,924 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 17:56:18,925 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 17:56:18,926 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 17:59:37,251 - INFO - Generated Path File at ./PathPlotter/path1.path.js
+2019-04-24 18:19:31,565 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 18:19:31,566 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 18:19:31,567 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 18:19:31,593 - INFO - Generated Path File at ./PathPlotter/path1.path.js
+2019-04-24 18:20:30,662 - INFO - Generated HTML File at ./PathPlotter/path_plotter.html
+2019-04-24 18:20:30,663 - INFO - Generated Start Point File at ./PathPlotter/path1.start_point.js
+2019-04-24 18:20:30,664 - INFO - Generated Sensor Point File at ./PathPlotter/path1.sensors.js
+2019-04-24 18:20:30,665 - INFO - Generated Path File at ./PathPlotter/path1.path.js
