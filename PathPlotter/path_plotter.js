@@ -40,17 +40,17 @@ function translateCoordinates() {
 	path_list = full_path_points.split(" ");
 	
 	function findLimitCoordinates() {
-		var rightmost = 0, leftmost = width, bottommost = height, topmost = 0;
+		var rightmost = 0, leftmost = width, bottommost = 0, topmost = height;
 		for (var i = 0; i < points_list.length; i++) {
 			var point = points_list[i];
 			var splitted_point = point.split(",");
-			var x = parseInt(splitted_point[0], 10);
-			var y = parseInt(splitted_point[1], 10);
-			var radius = parseInt(splitted_point[2], 10);
+			var x = parseFloat(splitted_point[0], 10);
+			var y = parseFloat(splitted_point[1], 10);
+			var radius = parseFloat(splitted_point[2], 10);
 			rightmost = Math.max(rightmost, x + radius);
 			leftmost = Math.min(leftmost, x - radius);
-			topmost = Math.max(topmost, y + radius);
-			bottommost = Math.min(bottommost, y - radius);
+			bottommost = Math.max(bottommost, y + radius);
+			topmost = Math.min(topmost, y - radius);
 		}
 		return [rightmost, leftmost, topmost, bottommost];
 	}
@@ -61,8 +61,8 @@ function translateCoordinates() {
 		for (var i = 0; i < points_list.length; i++) {
 			var point = points_list[i];
 			var splitted_point = point.split(",");
-			var x = parseInt(splitted_point[0], 10);
-			var y = parseInt(splitted_point[1], 10);
+			var x = parseFloat(splitted_point[0], 10);
+			var y = parseFloat(splitted_point[1], 10);
 			var new_x = (x - leftmost) / (rightmost - leftmost) * width;
 			var new_y = (y - bottommost) / (topmost - bottommost) * height;
 			if (splitted_point.length == 3) {

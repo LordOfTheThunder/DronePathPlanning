@@ -1,4 +1,4 @@
-from MainConfig import waypoint_config
+from MainConfig import waypoint_config, global_config
 import pandas as pd
 import csv
 
@@ -45,7 +45,7 @@ def createWaypointFile(point_list):
 
     # Add first point - point of HOME
     first_point = [1, 0, waypoint_config["Commands"]["WAYPOINT"], 0, 0, 0, 0,
-                   waypoint_config["Start Point"][0], waypoint_config["Start Point"][1],
+                   global_config["Start Point"][0], global_config["Start Point"][1],
                    waypoint_config["Default Alt"], 1]
     data = createWaypointRowMap(first_point)
     # Build other points according to path plan

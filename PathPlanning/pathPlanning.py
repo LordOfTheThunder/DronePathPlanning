@@ -51,6 +51,7 @@ def travelingSalesman(start_point, point_list):
             curr_point = closest_point
             yield closest_point
 
+    # For now we will use the heuristic traveling salesman
     return heuristicTravelingSalesman(start_point, point_list)
     # return bruteForceTravelingSalesman(start_point, point_list)
 
