@@ -19,10 +19,10 @@ function init() {
 
 function initCanvas() {
 	var c = document.getElementById("myCanvas");
-	width = document.body.clientWidth;
-	height = document.body.clientHeight;
-	c.width = width;
-	c.height = height;
+	c.width = document.body.clientWidth;
+	c.height = document.body.clientHeight;
+	width = c.width;
+	height = c.height;
 }
 
 function translateCoordinates() {
@@ -63,8 +63,11 @@ function translateCoordinates() {
 			var splitted_point = point.split(",");
 			var x = parseFloat(splitted_point[0], 10);
 			var y = parseFloat(splitted_point[1], 10);
-			var new_x = (x - leftmost) / (rightmost - leftmost) * width;
-			var new_y = (y - bottommost) / (topmost - bottommost) * height;
+			// Sub rect - smaller than width,height rect
+			sub_width = width * 0.8;
+			sub_height = height * 0.8;
+			var new_x = (x - leftmost) / (rightmost - leftmost) * sub_width + (width - sub_width) / 2;
+			var new_y = (y - bottommost) / (topmost - bottommost) * sub_height + (height - sub_height) / 2;
 			if (splitted_point.length == 3) {
 				translated_points.push([new_x, new_y, splitted_point[2]]);
 			} else {
@@ -84,6 +87,7 @@ function drawSensors() {
   var c = document.getElementById("myCanvas");
   var ctx = c.getContext("2d");
   
+  sensor_point_list = sensor_points.split(" ");
   for (var i = 1; i < translated_coordinates.length; i++) {
 	var translated_coordinate = translated_coordinates[i];
 	
@@ -106,6 +110,16 @@ function drawSensors() {
 	ctx.stroke();
 	
 	ctx.restore();
+	
+	// Draw sensor text
+	ctx.save();
+  
+	ctx.beginPath();
+	ctx.font = "bold 12px Arial";
+	var split_coord = sensor_point_list[i - 1].split(",");
+	ctx.fillText("(" + split_coord[0] + "," + split_coord[1] + ")", translated_coordinate[0], translated_coordinate[1]);
+	  
+	ctx.restore();
   }
 }
 
@@ -114,6 +128,7 @@ function drawStartPoint() {
   var ctx = c.getContext("2d");
   
   translated_start_point = translated_coordinates[0];
+  // Draw start point
   ctx.save();
   
   ctx.beginPath();
@@ -122,12 +137,23 @@ function drawStartPoint() {
   ctx.fill();
   
   ctx.restore();
+  
+  // Draw start point text
+  ctx.save();
+  
+  ctx.beginPath();
+  ctx.font = "bold 12px Arial";
+  var split_start_point = start_point.split(",");
+  ctx.fillText("(" + split_start_point[0] + "," + split_start_point[1] + ")", translated_start_point[0], translated_start_point[1]);
+  
+  ctx.restore();
 }
 
 function drawPath() {
   var c = document.getElementById("myCanvas");
   var ctx = c.getContext("2d");
   
+  // Draw path line
   ctx.save();
   
   ctx.beginPath();
@@ -141,6 +167,14 @@ function drawPath() {
   ctx.moveTo(curr_x, curr_y);
   ctx.lineTo(next_x, next_y);
   ctx.stroke();
+  
+  ctx.restore();
+  
+  // Draw line ordering
+  ctx.save();
+  
+  ctx.font = "bold 16px Arial";
+  ctx.fillText(draw_pos, (curr_x + next_x) / 2, (curr_y + next_y) / 2);
   
   ctx.restore();
 }
@@ -178,6 +212,7 @@ function animate() {
         // Put your drawing code here
 		if (draw_pos == translated_path_coordinates.length - 1) {
 			cancelAnimationFrame(myReq);
+			return;
 		}
 		
 		drawPath();
