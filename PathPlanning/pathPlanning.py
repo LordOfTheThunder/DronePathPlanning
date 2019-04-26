@@ -6,6 +6,7 @@ class TravelingSalesmanTypes(Enum):
     Heuristic = 1
     BruteForce = 2
 
+# Regular path planning for points
 def travelingSalesman(start_point, point_list, alg_type=TravelingSalesmanTypes.Heuristic):
 
     def euclideanDist(first_point, second_point):
@@ -62,6 +63,7 @@ def travelingSalesman(start_point, point_list, alg_type=TravelingSalesmanTypes.H
     if alg_type == TravelingSalesmanTypes.BruteForce:
         return bruteForceTravelingSalesman()
 
+# Adapted path planning for points with radii
 def advancedTravelingSalesman(start_point, point_radius_list, alg_type=TravelingSalesmanTypes.Heuristic):
     def createNodes():
         circles = list(GeoHelpers.getCircleObjectsFromList(point_radius_list))

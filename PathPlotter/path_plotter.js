@@ -2,6 +2,7 @@ var fps = 2, fpsInterval, startTime, now, then, elapsed;
 var width, height;
 var translated_start_point, translated_path_coordinates, translated_coordinates;
 var translated_intersection_polygons = [];
+var translated_obstacle_bboxes = [];
 var draw_point_width = 4;
 var draw_pos = 0;
 var text_size = 12;
@@ -13,6 +14,8 @@ function init() {
 	translateCoordinates();
 	// Draw the intersections
 	drawIntersections();
+	// Draw the obstacles
+	drawObstacles();
 	// Draw start point - path1.start_point
 	drawStartPoint();
 	// Draw sensors with radius - path1.sensors
@@ -56,36 +59,80 @@ function translateCoordinates() {
 	// path_points hold the locations of the path (2d point)
 	var path_list = [start_point].concat(path_points).concat([start_point]);
 	
+	// Sub rect - smaller than width,height rect
+	sub_width = width * 0.8;
+	sub_height = height * 0.8;
+	
+	function translatePointFromLimits(coords, point) {
+		var rightmost = coords[0], leftmost = coords[1], topmost = coords[2], bottommost = coords[3];
+		var x = point[1];
+		var y = point[0];
+		var new_x = (x - leftmost) / (rightmost - leftmost) * sub_width + (width - sub_width) / 2;
+		var new_y = (y - bottommost) / (topmost - bottommost) * sub_height + (height - sub_height) / 2;
+		return [new_x, new_y]
+	}
+	
+	function translateBboxFromLimits(coords, bbox) {
+		var bl = bbox[0];
+		var ur = bbox[1];
+		return [translatePointFromLimits(coords, bl), translatePointFromLimits(coords, ur)]
+	}
+	
+	// For translating start point and coords
 	function translateFromLimits(coords, points_list) {
 		var rightmost = coords[0], leftmost = coords[1], topmost = coords[2], bottommost = coords[3];
 		var translated_points = [];
 		for (var i = 0; i < points_list.length; i++) {
 			var point = points_list[i];
-			var x = point[1];
-			var y = point[0];
-			// Sub rect - smaller than width,height rect
-			sub_width = width * 0.8;
-			sub_height = height * 0.8;
-			var new_x = (x - leftmost) / (rightmost - leftmost) * sub_width + (width - sub_width) / 2;
-			var new_y = (y - bottommost) / (topmost - bottommost) * sub_height + (height - sub_height) / 2;
+			var new_point = translatePointFromLimits(coords, point);
 			if (point.length == 3) {
 				var radius = point[2];
 				var new_radius = radius / (rightmost - leftmost) * sub_width;
-				translated_points.push([new_x, new_y, new_radius]);
+				translated_points.push([new_point[0], new_point[1], new_radius]);
 			} else {
-				translated_points.push([new_x, new_y]);
+				translated_points.push(new_point);
 			}
 		}
 		return translated_points;
+	}
+	
+	function translateBboxesFromLimits(coords, bboxes) {
+		var translated_bboxes = [];
+		for (var i = 0; i < bboxes.length; i++) {
+			var bbox = bboxes[i];
+			var new_bbox = translateBboxFromLimits(coords, bbox);
+			translated_bboxes.push(new_bbox);
+		}
+		return translated_bboxes;
 	}
 	var coords = findLimitCoordinates();
 	// First point returned is the start point
 	translated_coordinates = translateFromLimits(coords, points_list);
 	// Calculate for path_list
 	translated_path_coordinates = translateFromLimits(coords, path_list);
-	
+	// Calculate for intersection polygons
 	for (var i = 0; i < intersection_point_path.length; i++) {
 		translated_intersection_polygons.push(translateFromLimits(coords, intersection_point_path[i]));
+	}
+	// Calculate for obstacle bboxes
+	translated_obstacle_bboxes = translateBboxesFromLimits(coords, obstacle_bboxes);
+}
+
+function drawObstacles() {
+	var c = document.getElementById("myCanvas");
+	var ctx = c.getContext("2d");
+	
+	for (var i = 0; i < translated_obstacle_bboxes.length; i++) {
+		var curr_bbox = translated_obstacle_bboxes[i];
+		var x1 = curr_bbox[0][0], y1 = curr_bbox[0][1], x2 = curr_bbox[1][0], y2 = curr_bbox[1][1];
+		ctx.save();
+		
+		ctx.beginPath();
+		ctx.fillStyle = "#524C8D";
+		ctx.rect(x1, y2, x2 - x1, y1 - y2);
+		ctx.fill();
+		
+		ctx.restore();
 	}
 }
 

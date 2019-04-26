@@ -15,6 +15,7 @@ def generateHTMLFile():
         fh.write("<script src=\"" + simulation_config["Start Point File"] +"\"></script>\n")
         fh.write("<script src=\"" + simulation_config["Sensor File"] + "\"></script>\n")
         fh.write("<script src=\"" + simulation_config["Path File"] + "\"></script>\n")
+        fh.write("<script src=\"" + simulation_config["Obstacle Path File"] + "\"></script>\n")
         fh.write("<script src=\"" + simulation_config["Intersection File"] + "\"></script>\n")
         fh.write("<script src=\"" + simulation_config["JS Code"] + "\"></script>\n\n")
         fh.write("</body>\n")
@@ -81,5 +82,18 @@ def generateIntersectionFile(point_radius_list):
                 fh.write("[" + point_string + "]" + last_space)
                 cnt -= 1
             fh.write("])\n")
-        pass
+    fh.close()
+
+def generateObstacleFile(obstacle_bboxes):
+    obstacle_bboxes_path = simulation_config["Relative Path"] + simulation_config["Obstacle Path File"]
+    with open(obstacle_bboxes_path, 'w') as fh:
+        fh.write("var obstacle_bboxes = " + "[")
+        cnt = len(obstacle_bboxes)
+        last_space = ", "
+        for bbox in obstacle_bboxes:
+            if cnt == 1:
+                last_space = ""
+            fh.write("[" + "[" + str(bbox[0]) + "," + str(bbox[1]) + "]" + "," + "[" + str(bbox[2]) + "," + str(bbox[3]) + "]" + "]" + last_space)
+            cnt -= 1
+        fh.write("]")
     fh.close()

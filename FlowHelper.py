@@ -18,3 +18,12 @@ def getStartPointFromCsv():
         point = [float(x) for x in fh.readline().split(',')]
     fh.close()
     return point
+
+def getObstacleBboxesFromCsv():
+    file = global_config["Obstacles Bbox CSV"]
+    bbox_list = []
+    with open(file, 'r') as fh:
+        for bbox in fh:
+            bbox_list.append([float(x) for x in bbox.split(',')])
+    fh.close()
+    return bbox_list

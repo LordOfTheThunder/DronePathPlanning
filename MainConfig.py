@@ -29,12 +29,16 @@ simulation_config = {
     "Start Point File" : "path1.start_point.js",
     "Sensor File" : "path1.sensors.js",
     "Path File" : "path1.path.js",
-    "Intersection File" : "intersection_path.js"
+    "Obstacle Path File" : "path1.obstacle_bbox_path.js",
+    # This file is an input file generated using only python code without CSV dependency. So it is not path specific
+    # Therefore we don't add path name to the name of the file
+    "Intersection File" : "intersection_path.js",
 }
 
 global_config = {
     "Start Point CSV" : "start_point.csv",
     "Sensor Point CSV" : "sensor_positions.csv",
+    "Obstacles Bbox CSV" : "obstacle_bboxes.csv",
 }
 
 # Logger for the debug logs

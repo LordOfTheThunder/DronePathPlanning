@@ -8,6 +8,8 @@ def SimulationFlow():
     sensor_coords, sensor_coords_with_radius = FlowHelper.getSensorPointsFromCsv()
     # Parse start point
     start_point = FlowHelper.getStartPointFromCsv()
+    # Parse Obstacle bboxes
+    obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
     # Generate HTML file using config
     SimulationGenerator.generateHTMLFile()
     # Generate files with start point, sensor points and path
@@ -16,6 +18,8 @@ def SimulationFlow():
     SimulationGenerator.generateSensorPointsFile(sensor_coords_with_radius)
     # Generate sensor radii intersection file
     SimulationGenerator.generateIntersectionFile(sensor_coords_with_radius)
+    # Generate Obstacle file
+    SimulationGenerator.generateObstacleFile(obstacle_bboxes)
     # Calculate path with traveling salesman
 
     # Regular traveling salesman
@@ -30,6 +34,9 @@ def WaypointFlow():
     sensor_coords, sensor_coords_with_radius = FlowHelper.getSensorPointsFromCsv()
     # Parse start point
     start_point = FlowHelper.getStartPointFromCsv()
+    # Parse Obstacle bboxes
+    obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
+
     # Calculate path with traveling salesman
     # Regular traveling salesman
     # path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
@@ -40,5 +47,5 @@ def WaypointFlow():
 
 if __name__ == "__main__":
     # Different flows we can execute
-    # SimulationFlow()
-    WaypointFlow()
+    SimulationFlow()
+    # WaypointFlow()
