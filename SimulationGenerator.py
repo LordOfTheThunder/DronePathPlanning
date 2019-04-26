@@ -1,6 +1,7 @@
 # Generate HTML file
 # Generate js files with configs after getting input from path planning
 from MainConfig import simulation_config, logger
+from Geo import GeoHelpers
 from shapely.geometry import Point, mapping
 
 def generateHTMLFile():
@@ -60,22 +61,9 @@ def generatePathFile(path):
 
 # Used for canvas drawing
 def generateIntersectionFile(point_radius_list):
-    pols = []
-    # Get all circle objects
-    for x_y_radius in point_radius_list:
-        p = Point(x_y_radius[0], x_y_radius[1])
-        circle = p.buffer(x_y_radius[2])
-        pols.append(circle)
-
+    pols = list(GeoHelpers.getCircleObjectsFromList(point_radius_list))
     # Calculate all intersections
-    intersections = []
-    for i in range(len(pols)):
-        for j in range(i + 1, len(pols)):
-            pol_1 = pols[i]
-            pol_2 = pols[j]
-            if pol_1 is pol_2 or not pol_1.intersects(pol_2):
-                continue
-            intersections.append(pol_1.intersection(pol_2))
+    intersections = list(GeoHelpers.getIntersectionsFromCircles(pols))
 
     # write all intersections to js file as array of intersection strings
     intersection_point_path = simulation_config["Relative Path"] + simulation_config["Intersection File"]

@@ -4,21 +4,21 @@ var translated_start_point, translated_path_coordinates, translated_coordinates;
 var translated_intersection_polygons = [];
 var draw_point_width = 4;
 var draw_pos = 0;
+var text_size = 12;
 
 function init() {
 	// Init canvas
 	initCanvas();
 	// Translate coordinates to our screen sizeToContent
 	translateCoordinates();
+	// Draw the intersections
+	drawIntersections();
 	// Draw start point - path1.start_point
 	drawStartPoint();
 	// Draw sensors with radius - path1.sensors
 	drawSensors();
-	// Draw the intersections
-	drawIntersections();
 	// Draw path animation - path1.path
 	startAnimating(fps);
-	// Increase width to see points
 }
 
 function initCanvas() {
@@ -141,10 +141,11 @@ function drawSensors() {
 	ctx.save();
   
 	ctx.beginPath();
-	ctx.font = "bold 12px Arial";
+	ctx.font = "bold " + text_size + "px Arial";
 	var split_coord = sensor_points[i - 1];
 	ctx.fillText("(" + split_coord[1] + "," + split_coord[0] + ")", translated_coordinate[0], translated_coordinate[1]);
-	  
+	ctx.fillText("r = " + split_coord[2], translated_coordinate[0], translated_coordinate[1] + text_size);
+	
 	ctx.restore();
   }
 }

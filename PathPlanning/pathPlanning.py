@@ -1,12 +1,17 @@
 from operator import itemgetter
-from shapely.geometry import Point
+from enum import Enum
+from Geo import GeoHelpers
 
-def travelingSalesman(start_point, point_list):
+class TravelingSalesmanTypes(Enum):
+    Heuristic = 1
+    BruteForce = 2
+
+def travelingSalesman(start_point, point_list, alg_type=TravelingSalesmanTypes.Heuristic):
 
     def euclideanDist(first_point, second_point):
         return ((first_point[0] - second_point[0])**2 + (first_point[1] - second_point[1])**2)**0.5
 
-    def bruteForceTravelingSalesman(start_point, point_list):
+    def bruteForceTravelingSalesman():
         paths = []
         def getAllPointPermutations(point_list):
             def swap(list, a, b):
@@ -43,7 +48,7 @@ def travelingSalesman(start_point, point_list):
         return min_path
 
 
-    def heuristicTravelingSalesman(start_point, point_list):
+    def heuristicTravelingSalesman():
         curr_point = start_point
         while point_list:
             point_dist_list = [[point, euclideanDist(curr_point, point)] for point in point_list]
@@ -52,16 +57,27 @@ def travelingSalesman(start_point, point_list):
             curr_point = closest_point
             yield closest_point
 
-    # For now we will use the heuristic traveling salesman
-    return heuristicTravelingSalesman(start_point, point_list)
-    # return bruteForceTravelingSalesman(start_point, point_list)
+    if alg_type == TravelingSalesmanTypes.Heuristic:
+        return heuristicTravelingSalesman()
+    if alg_type == TravelingSalesmanTypes.BruteForce:
+        return bruteForceTravelingSalesman()
 
-def advancedTravelingSalesman(point_radius_list):
+def advancedTravelingSalesman(start_point, point_radius_list, alg_type=TravelingSalesmanTypes.Heuristic):
     def createNodes():
-        pass
-    def calcPath():
-        pass
+        circles = list(GeoHelpers.getCircleObjectsFromList(point_radius_list))
+        node_points = list(GeoHelpers.getIntersectionRepresentativePointsFromCircles(circles))
+        node_points += GeoHelpers.getCirclePointsNotInIntersection(point_radius_list)
+        for point in node_points:
+            yield [point.x, point.y]
     def bruteForceAdvancedTS():
-        pass
+        node_points = list(createNodes())
+        return travelingSalesman(start_point, node_points, TravelingSalesmanTypes.BruteForce)
     def heuristicAdvancedTS():
-        pass
+        node_points = list(createNodes())
+        return travelingSalesman(start_point, node_points, TravelingSalesmanTypes.Heuristic)
+
+    if alg_type == TravelingSalesmanTypes.Heuristic:
+        return heuristicAdvancedTS()
+    if alg_type == TravelingSalesmanTypes.BruteForce:
+        return bruteForceAdvancedTS()
+

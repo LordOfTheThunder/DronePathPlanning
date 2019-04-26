@@ -17,8 +17,11 @@ def SimulationFlow():
     # Generate sensor radii intersection file
     SimulationGenerator.generateIntersectionFile(sensor_coords_with_radius)
     # Calculate path with traveling salesman
-    # For now use the regular non adaptive traveling salesman - we will later upgrade it to adapted traveling salesman with radius
-    path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
+
+    # Regular traveling salesman
+    # path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
+    # Adapted traveling salesman
+    path = list(pathPlanning.advancedTravelingSalesman(start_point, sensor_coords_with_radius))
     # Generate Path File
     SimulationGenerator.generatePathFile(path)
 
@@ -28,12 +31,14 @@ def WaypointFlow():
     # Parse start point
     start_point = FlowHelper.getStartPointFromCsv()
     # Calculate path with traveling salesman
-    # For now use the regular non adaptive traveling salesman - we will later upgrade it to adapted traveling salesman with radius
-    path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
+    # Regular traveling salesman
+    # path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
+    # Adapted traveling salesman
+    path = list(pathPlanning.advancedTravelingSalesman(start_point, sensor_coords_with_radius))
     # Create waypoint file
     file.createWaypointFile(start_point, path)
 
 if __name__ == "__main__":
     # Different flows we can execute
-    SimulationFlow()
-    # WaypointFlow()
+    # SimulationFlow()
+    WaypointFlow()
