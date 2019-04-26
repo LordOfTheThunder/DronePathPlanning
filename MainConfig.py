@@ -33,12 +33,18 @@ simulation_config = {
     # This file is an input file generated using only python code without CSV dependency. So it is not path specific
     # Therefore we don't add path name to the name of the file
     "Intersection File" : "intersection_path.js",
+    "Grid File" : "grid_file.js",
 }
 
 global_config = {
     "Start Point CSV" : "start_point.csv",
     "Sensor Point CSV" : "sensor_positions.csv",
     "Obstacles Bbox CSV" : "obstacle_bboxes.csv",
+}
+
+path_planning_algorithm_config = {
+    "Grid Size" : 20,
+    "Grid Coeff" : 0.2
 }
 
 # Logger for the debug logs

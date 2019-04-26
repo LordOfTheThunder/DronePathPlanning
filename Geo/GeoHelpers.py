@@ -1,4 +1,5 @@
 from shapely.geometry import Point
+import numpy as np
 
 
 def getCircleObjectsFromList(point_radius_list):
@@ -64,3 +65,35 @@ def getCirclePointsNotInIntersection(pols):
         ret.append(circle.representative_point())
 
     return ret
+
+def getIntersectionPointsForShapes(point_radius_list):
+    circles = list(getCircleObjectsFromList(point_radius_list))
+    node_points = list(getIntersectionRepresentativePointsFromCircles(circles))
+    node_points += getCirclePointsNotInIntersection(point_radius_list)
+    for point in node_points:
+        yield [point.x, point.y]
+
+def calcLimitsFromPoints(point_list, coeff = 0):
+    ux, uy, lx, ly = 0, 0, float("inf"), float("inf")
+    for point_radius in point_list:
+        ux = max(ux, point_radius[1])
+        uy = max(uy, point_radius[0])
+        lx = min(lx, point_radius[1])
+        ly = min(ly, point_radius[0])
+    # Make the grid slightly bigger to allow path around
+    new_lx = lx - (ux - lx) * coeff
+    new_ly = ly - (uy - ly) * coeff
+    new_ux = ux + (ux - lx) * coeff
+    new_uy = uy + (uy - ly) * coeff
+
+    return new_lx, new_ly, new_ux, new_uy
+
+def getGraphFromPointLimits(lx, ly, ux, uy, grid_size):
+    x_step = (ux - lx) / grid_size
+    y_step = (uy - ly) / grid_size
+    graph = {}
+    for idx, x in enumerate(np.arange(lx, ux, x_step)):
+        for idy, y in enumerate(np.arange(ly, uy, y_step)):
+            graph[str(idx) + "," + str(idy)] = []
+
+    return graph

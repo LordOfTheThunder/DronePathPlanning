@@ -1,6 +1,6 @@
 # Generate HTML file
 # Generate js files with configs after getting input from path planning
-from MainConfig import simulation_config, logger
+from MainConfig import simulation_config, logger, path_planning_algorithm_config
 from Geo import GeoHelpers
 from shapely.geometry import Point, mapping
 
@@ -12,11 +12,13 @@ def generateHTMLFile():
         fh.write("<body>\n\n")
         fh.write("<canvas id=\"myCanvas\" width=1000 height=500 style=\"border:1px solid #d3d3d3;\">\n")
         fh.write("Your browser does not support the HTML5 canvas tag.</canvas>\n\n")
+        fh.write("<button onclick=\"gridOn()\" id=\"gridButton\">Grid On</button>\n\n")
         fh.write("<script src=\"" + simulation_config["Start Point File"] +"\"></script>\n")
         fh.write("<script src=\"" + simulation_config["Sensor File"] + "\"></script>\n")
         fh.write("<script src=\"" + simulation_config["Path File"] + "\"></script>\n")
         fh.write("<script src=\"" + simulation_config["Obstacle Path File"] + "\"></script>\n")
         fh.write("<script src=\"" + simulation_config["Intersection File"] + "\"></script>\n")
+        fh.write("<script src=\"" + simulation_config["Grid File"] + "\"></script>\n")
         fh.write("<script src=\"" + simulation_config["JS Code"] + "\"></script>\n\n")
         fh.write("</body>\n")
         fh.write("</html>\n")
@@ -95,5 +97,37 @@ def generateObstacleFile(obstacle_bboxes):
                 last_space = ""
             fh.write("[" + "[" + str(bbox[0]) + "," + str(bbox[1]) + "]" + "," + "[" + str(bbox[2]) + "," + str(bbox[3]) + "]" + "]" + last_space)
             cnt -= 1
+        fh.write("]")
+    fh.close()
+
+def generateGridFile(start_point, point_radius_list):
+    nodes = list(GeoHelpers.getIntersectionPointsForShapes(point_radius_list)) + [start_point]
+    lx, ly, ux, uy = GeoHelpers.calcLimitsFromPoints(nodes, path_planning_algorithm_config["Grid Coeff"])
+    grid_size = path_planning_algorithm_config["Grid Size"]
+    x_step = (ux - lx) / grid_size
+    y_step = (uy - ly) / grid_size
+    grid_file = simulation_config["Relative Path"] + simulation_config["Grid File"]
+    with open(grid_file, 'w') as fh:
+        fh.write("var grid_lines = " + "[")
+        cnt = 0
+        last_space = ", "
+        for i in range(grid_size + 1):
+            if cnt == grid_size:
+                last_space = ""
+            # Horizontal Line
+            horizontal_line_lx = lx
+            horizontal_line_ly = ly + y_step * cnt
+            horizontal_line_ux = ux
+            horizontal_line_uy = horizontal_line_ly
+            # Vertical Line
+            vertical_line_lx = lx + x_step * cnt
+            vertical_line_ly = ly
+            vertical_line_ux = vertical_line_lx
+            vertical_line_uy = uy
+            fh.write("[" + "[" + str(horizontal_line_ly) + "," + str(horizontal_line_lx) + "]" + ", ["
+                     + str(horizontal_line_uy) + "," + str(horizontal_line_ux) + "]" + "]" + ", ")
+            fh.write("[" + "[" + str(vertical_line_ly) + "," + str(vertical_line_lx) + "]" + ", ["
+                     + str(vertical_line_uy) + "," + str(vertical_line_ux) + "]" + "]" + last_space)
+            cnt += 1
         fh.write("]")
     fh.close()

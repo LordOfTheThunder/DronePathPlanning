@@ -3,9 +3,15 @@ var width, height;
 var translated_start_point, translated_path_coordinates, translated_coordinates;
 var translated_intersection_polygons = [];
 var translated_obstacle_bboxes = [];
+var translated_grid = [];
 var draw_point_width = 4;
 var draw_pos = 0;
 var text_size = 12;
+var grid_flag = true;
+var drawn_objects = ["drawIntersections()", 
+					 "drawObstacles()",
+					 "drawStartPoint()",
+					 "drawSensors()"];
 
 function init() {
 	// Init canvas
@@ -85,13 +91,9 @@ function translateCoordinates() {
 		for (var i = 0; i < points_list.length; i++) {
 			var point = points_list[i];
 			var new_point = translatePointFromLimits(coords, point);
-			if (point.length == 3) {
-				var radius = point[2];
-				var new_radius = radius / (rightmost - leftmost) * sub_width;
-				translated_points.push([new_point[0], new_point[1], new_radius]);
-			} else {
-				translated_points.push(new_point);
-			}
+			var radius = point[2];
+			var new_radius = radius / (rightmost - leftmost) * sub_width;
+			translated_points.push([new_point[0], new_point[1], new_radius]);
 		}
 		return translated_points;
 	}
@@ -116,6 +118,26 @@ function translateCoordinates() {
 	}
 	// Calculate for obstacle bboxes
 	translated_obstacle_bboxes = translateBboxesFromLimits(coords, obstacle_bboxes);
+	// Calculate for grid
+	translated_grid = translateBboxesFromLimits(coords, grid_lines);
+}
+
+function drawGrid() {
+	var c = document.getElementById("myCanvas");
+	var ctx = c.getContext("2d");
+	
+	for (var i = 0; i < translated_grid.length; i++) {
+		var curr_line = translated_grid[i];
+		var x1 = curr_line[0][0], y1 = curr_line[0][1], x2 = curr_line[1][0], y2 = curr_line[1][1];
+		ctx.save();
+		
+		ctx.beginPath();
+		ctx.strokeStyle = "#7D5800";
+		ctx.rect(x1, y2, x2 - x1, y1 - y2);
+		ctx.stroke();
+		
+		ctx.restore();
+	}
 }
 
 function drawObstacles() {
@@ -290,6 +312,33 @@ function animate() {
 		
 		drawPath();
     }
+}
+
+function redraw() {
+	// clear canvas
+	var c = document.getElementById("myCanvas");
+	var ctx = c.getContext("2d");
+	ctx.clearRect(0, 0, c.width, c.height);
+	for (var i = 0; i < drawn_objects.length; i++) {
+		eval(drawn_objects[i]);
+	}
+	var saved_pos = draw_pos;
+	draw_pos = 0;
+	for (var i = 0; i < saved_pos; i++) {
+		drawPath();
+	}
+}
+
+function gridOn() {
+	if (grid_flag) {
+		drawGrid();
+		document.getElementById("gridButton").innerText = "Grid On";
+	}
+	else {
+		redraw();
+		document.getElementById("gridButton").innerText = "Grid Off";
+	}
+	grid_flag = !grid_flag;
 }
 
 init();

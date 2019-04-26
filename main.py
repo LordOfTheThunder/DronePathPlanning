@@ -2,6 +2,7 @@ from Waypoint import file
 from PathPlanning import pathPlanning
 import SimulationGenerator
 import FlowHelper
+import MainConfig
 
 def SimulationFlow():
     # Parse sensor points
@@ -20,6 +21,8 @@ def SimulationFlow():
     SimulationGenerator.generateIntersectionFile(sensor_coords_with_radius)
     # Generate Obstacle file
     SimulationGenerator.generateObstacleFile(obstacle_bboxes)
+    # Generate grid file
+    SimulationGenerator.generateGridFile(start_point, sensor_coords_with_radius)
     # Calculate path with traveling salesman
 
     # Regular traveling salesman
@@ -47,5 +50,9 @@ def WaypointFlow():
 
 if __name__ == "__main__":
     # Different flows we can execute
-    SimulationFlow()
     # WaypointFlow()
+    SimulationFlow()
+    # start_point = FlowHelper.getStartPointFromCsv()
+    # sensor_coords, sensor_coords_with_radius = FlowHelper.getSensorPointsFromCsv()
+    # obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
+    # pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes)

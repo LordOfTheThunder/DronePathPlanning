@@ -1,6 +1,8 @@
 from operator import itemgetter
 from enum import Enum
 from Geo import GeoHelpers
+from MainConfig import path_planning_algorithm_config
+from shapely.geometry import Point
 
 class TravelingSalesmanTypes(Enum):
     Heuristic = 1
@@ -66,11 +68,7 @@ def travelingSalesman(start_point, point_list, alg_type=TravelingSalesmanTypes.H
 # Adapted path planning for points with radii
 def advancedTravelingSalesman(start_point, point_radius_list, alg_type=TravelingSalesmanTypes.Heuristic):
     def createNodes():
-        circles = list(GeoHelpers.getCircleObjectsFromList(point_radius_list))
-        node_points = list(GeoHelpers.getIntersectionRepresentativePointsFromCircles(circles))
-        node_points += GeoHelpers.getCirclePointsNotInIntersection(point_radius_list)
-        for point in node_points:
-            yield [point.x, point.y]
+        return GeoHelpers.getIntersectionPointsForShapes(point_radius_list)
     def bruteForceAdvancedTS():
         node_points = list(createNodes())
         return travelingSalesman(start_point, node_points, TravelingSalesmanTypes.BruteForce)
@@ -83,3 +81,90 @@ def advancedTravelingSalesman(start_point, point_radius_list, alg_type=Traveling
     if alg_type == TravelingSalesmanTypes.BruteForce:
         return bruteForceAdvancedTS()
 
+def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, alg_type=TravelingSalesmanTypes.Heuristic):
+
+    def pointToString(point):
+        return str(point[0]) + "," + str(point[1])
+
+    def createNodes():
+        return GeoHelpers.getIntersectionPointsForShapes(point_radius_list)
+
+    # Create grid from points - calculate map bl and ur and divide by grid size for nodes
+    sensor_nodes = list(createNodes())
+    node_points = sensor_nodes.copy()
+    node_points.append(start_point)
+    grid_size = path_planning_algorithm_config["Grid Size"]
+    # Each node will be of type box
+    lx, ly, ux, uy = GeoHelpers.calcLimitsFromPoints(node_points, path_planning_algorithm_config["Grid Coeff"])
+
+    def calcDistances():
+        x_step = (ux - lx) / grid_size
+        y_step = (uy - ly) / grid_size
+        x_dist = x_step
+        y_dist = y_step
+        diagonal_dist = (x_step**2 + y_step**2)**0.5
+        return x_dist, y_dist, diagonal_dist
+
+    x_dist, y_dist, diagonal_dist = calcDistances()
+
+    def createGraph():
+        graph = GeoHelpers.getGraphFromPointLimits(lx, ly, ux, uy, grid_size)
+        # Find target nodes in which our node points are located
+        start_point_coords = [(int((start_point[1] - lx) / (ux - lx) * grid_size)),
+                              int((start_point[0] - ly) / (uy - ly) * grid_size)]
+        graph[pointToString(start_point_coords)].append("start")
+        for sensor_node in sensor_nodes:
+            graph[pointToString([int((sensor_node[1] - lx) / (ux - lx) * grid_size),
+                                        int((sensor_node[0] - ly) / (uy - ly) * grid_size)])].append("sensor")
+        # Find nodes in which we have obstacles
+        for bbox in obstacle_bboxes:
+            ll, ur = [bbox[0], bbox[1]], [bbox[2], bbox[3]]
+            bbox_lx = int((ll[1] - lx) / (ux - lx) * grid_size)
+            bbox_ux = int((ur[1] - lx) / (ux - lx) * grid_size)
+            bbox_ly = int((ll[0] - ly) / (uy - ly) * grid_size)
+            bbox_uy = int((ur[0] - ly) / (uy - ly) * grid_size)
+            for i in range(bbox_lx, bbox_ux + 1):
+                for j in range(bbox_ly, bbox_uy + 1):
+                    graph[pointToString([i, j])].append("obstacle")
+
+        return graph, start_point_coords
+
+    def getNeighbours(node):
+        # X neighbors
+        if node[0] + 1 < grid_size:
+            yield [[node[0] + 1, node[1]], x_dist]
+        if node[0] - 1 >= 0:
+            yield [[node[0] - 1, node[1]], x_dist]
+        # Y neighbors
+        if node[1] + 1 < grid_size:
+            yield [[node[0], node[1] + 1], y_dist]
+        if node[1] - 1 >= 0:
+            yield [[node[0], node[1] - 1], y_dist]
+        # Diagonal neighbors
+        if node[0] + 1 < grid_size and node[1] + 1 < grid_size:
+            yield [[node[0] + 1, node[1] + 1], diagonal_dist]
+        if node[0] + 1 < grid_size and node[1] - 1 >= 0:
+            yield [[node[0] + 1, node[1] - 1], diagonal_dist]
+        if node[0] - 1 >= 0 and node[1] + 1 < grid_size:
+            yield [[node[0] - 1, node[1] + 1], diagonal_dist]
+        if node[0] - 1 >= 0 and node[1] - 1 >= 0:
+            yield [[node[0] - 1, node[1] - 1], diagonal_dist]
+
+    def dijkstra(graph, start_point_coords):
+        dist = {}
+        for key in graph:
+            dist[key] = float("inf")
+
+        dist[str(start_point_coords[0]) + "," + str(start_point_coords[1])] = 0
+        curr_node = start_point_coords
+        while graph:
+            neighbors = list(getNeighbours(curr_node))
+            for neighbor in neighbors:
+                neighbor_coord, neighbor_dist = neighbor
+                # get closest neighbor, continue dijkstra from here tomorrow
+
+
+    graph, start_point_coords = createGraph()
+    # From start point to any other point
+    dijkstra(graph, start_point_coords)
+    print("x")
