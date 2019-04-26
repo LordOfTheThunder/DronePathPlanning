@@ -1,4 +1,5 @@
 from operator import itemgetter
+from shapely.geometry import Point
 
 def travelingSalesman(start_point, point_list):
 
@@ -55,3 +56,12 @@ def travelingSalesman(start_point, point_list):
     return heuristicTravelingSalesman(start_point, point_list)
     # return bruteForceTravelingSalesman(start_point, point_list)
 
+def advancedTravelingSalesman(point_radius_list):
+    def createNodes():
+        pass
+    def calcPath():
+        pass
+    def bruteForceAdvancedTS():
+        pass
+    def heuristicAdvancedTS():
+        pass

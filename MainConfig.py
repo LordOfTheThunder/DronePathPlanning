@@ -29,6 +29,7 @@ simulation_config = {
     "Start Point File" : "path1.start_point.js",
     "Sensor File" : "path1.sensors.js",
     "Path File" : "path1.path.js",
+    "Intersection File" : "intersection_path.js"
 }
 
 global_config = {

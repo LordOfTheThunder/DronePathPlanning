@@ -14,6 +14,8 @@ def SimulationFlow():
     SimulationGenerator.generateStartPointFile(start_point)
     # Generate sensor points file
     SimulationGenerator.generateSensorPointsFile(sensor_coords_with_radius)
+    # Generate sensor radii intersection file
+    SimulationGenerator.generateIntersectionFile(sensor_coords_with_radius)
     # Calculate path with traveling salesman
     # For now use the regular non adaptive traveling salesman - we will later upgrade it to adapted traveling salesman with radius
     path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))

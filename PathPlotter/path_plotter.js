@@ -1,6 +1,7 @@
 var fps = 2, fpsInterval, startTime, now, then, elapsed;
 var width, height;
 var translated_start_point, translated_path_coordinates, translated_coordinates;
+var translated_intersection_polygons = [];
 var draw_point_width = 4;
 var draw_pos = 0;
 
@@ -13,6 +14,8 @@ function init() {
 	drawStartPoint();
 	// Draw sensors with radius - path1.sensors
 	drawSensors();
+	// Draw the intersections
+	drawIntersections();
 	// Draw path animation - path1.path
 	startAnimating(fps);
 	// Increase width to see points
@@ -20,57 +23,53 @@ function init() {
 
 function initCanvas() {
 	var c = document.getElementById("myCanvas");
-	c.width = document.body.clientWidth / 2;
-	c.height = c.width;
+	var coords = findLimitCoordinates();
+	var rightmost = coords[0], leftmost = coords[1], topmost = coords[2], bottommost = coords[3];
+	width_height_ratio = (rightmost - leftmost) / (bottommost - topmost);
+	c.height = document.body.clientWidth / 2;
+	c.width = c.height * width_height_ratio;
 	width = c.width;
 	height = c.height;
+}
+
+function findLimitCoordinates() {
+	var points_list = [start_point].concat(sensor_points);
+	var rightmost = 0, leftmost = Infinity, bottommost = 0, topmost = Infinity;
+	for (var i = 0; i < points_list.length; i++) {
+		var point = points_list[i];
+		var x = point[1];
+		var y = point[0];
+		var radius = point[2];
+		rightmost = Math.max(rightmost, x + radius);
+		leftmost = Math.min(leftmost, x - radius);
+		bottommost = Math.max(bottommost, y + radius);
+		topmost = Math.min(topmost, y - radius);
+	}
+	return [rightmost, leftmost, topmost, bottommost];
 }
 
 function translateCoordinates() {
 	// start_point holds the start point (2d point)
 	// sensor_points hold the locations of the sensors + their radii (3d point)
-	var full_points = start_point.concat(" ");
-	full_points = full_points.concat(sensor_points);
-	points_list = full_points.split(" ");
+	var points_list = [start_point].concat(sensor_points);
 	
 	// path_points hold the locations of the path (2d point)
-	var full_path_points = start_point.concat(" ");
-	full_path_points = full_path_points.concat(path_points);
-	full_path_points = full_path_points.concat(" ");
-	full_path_points = full_path_points.concat(start_point);
-	path_list = full_path_points.split(" ");
-	
-	function findLimitCoordinates() {
-		var rightmost = 0, leftmost = width, bottommost = 0, topmost = height;
-		for (var i = 0; i < points_list.length; i++) {
-			var point = points_list[i];
-			var splitted_point = point.split(",");
-			var x = parseFloat(splitted_point[1], 10);
-			var y = parseFloat(splitted_point[0], 10);
-			var radius = parseFloat(splitted_point[2], 10);
-			rightmost = Math.max(rightmost, x + radius);
-			leftmost = Math.min(leftmost, x - radius);
-			bottommost = Math.max(bottommost, y + radius);
-			topmost = Math.min(topmost, y - radius);
-		}
-		return [rightmost, leftmost, topmost, bottommost];
-	}
+	var path_list = [start_point].concat(path_points).concat([start_point]);
 	
 	function translateFromLimits(coords, points_list) {
 		var rightmost = coords[0], leftmost = coords[1], topmost = coords[2], bottommost = coords[3];
 		var translated_points = [];
 		for (var i = 0; i < points_list.length; i++) {
 			var point = points_list[i];
-			var splitted_point = point.split(",");
-			var x = parseFloat(splitted_point[1], 10);
-			var y = parseFloat(splitted_point[0], 10);
+			var x = point[1];
+			var y = point[0];
 			// Sub rect - smaller than width,height rect
 			sub_width = width * 0.8;
 			sub_height = height * 0.8;
 			var new_x = (x - leftmost) / (rightmost - leftmost) * sub_width + (width - sub_width) / 2;
 			var new_y = (y - bottommost) / (topmost - bottommost) * sub_height + (height - sub_height) / 2;
-			if (splitted_point.length == 3) {
-				var radius = parseFloat(splitted_point[2], 10);
+			if (point.length == 3) {
+				var radius = point[2];
 				var new_radius = radius / (rightmost - leftmost) * sub_width;
 				translated_points.push([new_x, new_y, new_radius]);
 			} else {
@@ -84,13 +83,37 @@ function translateCoordinates() {
 	translated_coordinates = translateFromLimits(coords, points_list);
 	// Calculate for path_list
 	translated_path_coordinates = translateFromLimits(coords, path_list);
+	
+	for (var i = 0; i < intersection_point_path.length; i++) {
+		translated_intersection_polygons.push(translateFromLimits(coords, intersection_point_path[i]));
+	}
+}
+
+function drawIntersections() {
+	var c = document.getElementById("myCanvas");
+	var ctx = c.getContext("2d");
+	
+	for (var i = 0; i < translated_intersection_polygons.length; i++) {
+		ctx.save();
+		
+		ctx.beginPath();
+		ctx.fillStyle = "#4B9AFF"
+		ctx.moveTo(translated_intersection_polygons[i][0][0], translated_intersection_polygons[i][0][1]);
+		for (var j = 1; j < translated_intersection_polygons[i].length; j++) {
+			ctx.lineTo(translated_intersection_polygons[i][j][0], translated_intersection_polygons[i][j][1]);
+		}
+		ctx.moveTo(translated_intersection_polygons[i][0][0], translated_intersection_polygons[i][0][1]);
+		ctx.closePath();
+		ctx.fill();
+		
+		ctx.restore();
+	}
 }
 
 function drawSensors() {
   var c = document.getElementById("myCanvas");
   var ctx = c.getContext("2d");
   
-  sensor_point_list = sensor_points.split(" ");
   for (var i = 1; i < translated_coordinates.length; i++) {
 	var translated_coordinate = translated_coordinates[i];
 	
@@ -119,7 +142,7 @@ function drawSensors() {
   
 	ctx.beginPath();
 	ctx.font = "bold 12px Arial";
-	var split_coord = sensor_point_list[i - 1].split(",");
+	var split_coord = sensor_points[i - 1];
 	ctx.fillText("(" + split_coord[1] + "," + split_coord[0] + ")", translated_coordinate[0], translated_coordinate[1]);
 	  
 	ctx.restore();
@@ -146,8 +169,7 @@ function drawStartPoint() {
   
   ctx.beginPath();
   ctx.font = "bold 12px Arial";
-  var split_start_point = start_point.split(",");
-  ctx.fillText("(" + split_start_point[1] + "," + split_start_point[0] + ")", translated_start_point[0], translated_start_point[1]);
+  ctx.fillText("(" + start_point[1] + "," + start_point[0] + ")", translated_start_point[0], translated_start_point[1]);
   
   ctx.restore();
 }
