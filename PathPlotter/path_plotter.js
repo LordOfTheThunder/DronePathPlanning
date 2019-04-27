@@ -1,19 +1,19 @@
-var fps = 2, fpsInterval, startTime, now, then, elapsed;
+var fps, fpsInterval, startTime, now, then, elapsed;
 var width, height;
 var translated_start_point, translated_path_coordinates, translated_coordinates;
 var translated_intersection_polygons = [];
 var translated_obstacle_bboxes = [];
 var translated_grid = [];
-var draw_point_width = 4;
 var draw_pos = 0;
-var text_size = 12;
-var grid_flag = true;
+
 var drawn_objects = ["drawIntersections()", 
 					 "drawObstacles()",
 					 "drawStartPoint()",
 					 "drawSensors()"];
 
 function init() {
+	// Calculate variables
+	calcVariables();
 	// Init canvas
 	initCanvas();
 	// Translate coordinates to our screen sizeToContent
@@ -28,6 +28,10 @@ function init() {
 	drawSensors();
 	// Draw path animation - path1.path
 	startAnimating(fps);
+}
+
+function calcVariables() {
+	fps = path_points.length / animation_time;
 }
 
 function initCanvas() {
@@ -265,13 +269,15 @@ function drawPath() {
   
   ctx.restore();
   
-  // Draw line ordering
-  ctx.save();
-  
-  ctx.font = "bold 16px Arial";
-  ctx.fillText(draw_pos, (curr_x + next_x) / 2, (curr_y + next_y) / 2);
-  
-  ctx.restore();
+  if (show_path_ordering) {
+	// Draw line ordering
+	ctx.save();
+	  
+	ctx.font = "bold " + path_ordering_text_size + "px Arial";
+	ctx.fillText(draw_pos, (curr_x + next_x) / 2, (curr_y + next_y) / 2);
+	  
+	ctx.restore();
+  }
 }
 
 // initialize the timer variables and start the animation

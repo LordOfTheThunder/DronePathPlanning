@@ -22,29 +22,40 @@ waypoint_config = {
     "Default Coord Frame" : 3,
 }
 
-simulation_config = {
-    "Relative Path" : "./PathPlotter/",
-    "HTML File" : "path_plotter.html",
-    "JS Code" : "path_plotter.js",
-    "Start Point File" : "path1.start_point.js",
-    "Sensor File" : "path1.sensors.js",
-    "Path File" : "path1.path.js",
-    "Obstacle Path File" : "path1.obstacle_bbox_path.js",
-    # This file is an input file generated using only python code without CSV dependency. So it is not path specific
-    # Therefore we don't add path name to the name of the file
-    "Intersection File" : "intersection_path.js",
-    "Grid File" : "grid_file.js",
-}
-
 global_config = {
     "Start Point CSV" : "start_point.csv",
     "Sensor Point CSV" : "sensor_positions.csv",
     "Obstacles Bbox CSV" : "obstacle_bboxes.csv",
+    "Path Name" : "path1",
+}
+
+simulation_config = {
+    "Relative Path" : "./PathPlotter/",
+    "HTML File" : "path_plotter.html",
+    "JS Code" : "path_plotter.js",
+    "Start Point File" : global_config["Path Name"] + ".start_point.js",
+    "Sensor File" : global_config["Path Name"] + ".sensors.js",
+    "Path File" : global_config["Path Name"] + ".path.js",
+    "Obstacle Path File" : global_config["Path Name"] + ".obstacle_bbox_path.js",
+    # These files are input files generated using only python code without CSV dependency. So it is not path specific
+    # Therefore we don't add path name to the name of the file
+    "Intersection File" : "intersection_path.js",
+    "Grid File" : "grid_file.js",
+    "Config File" : "config.js"
 }
 
 path_planning_algorithm_config = {
-    "Grid Size" : 20,
+    "Grid Size" : 100,
     "Grid Coeff" : 0.2
+}
+
+js_config = {
+    "animation_time" : 5,
+    "draw_point_width" : 4,
+    "text_size" : 12,
+    "path_ordering_text_size" : 16,
+    "grid_flag" : "true",
+    "show_path_ordering" : "false"
 }
 
 # Logger for the debug logs

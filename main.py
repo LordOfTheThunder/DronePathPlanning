@@ -2,7 +2,6 @@ from Waypoint import file
 from PathPlanning import pathPlanning
 import SimulationGenerator
 import FlowHelper
-import MainConfig
 
 def SimulationFlow():
     # Parse sensor points
@@ -13,6 +12,8 @@ def SimulationFlow():
     obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
     # Generate HTML file using config
     SimulationGenerator.generateHTMLFile()
+    # Generate Config JS file
+    SimulationGenerator.generateConfigFile()
     # Generate files with start point, sensor points and path
     SimulationGenerator.generateStartPointFile(start_point)
     # Generate sensor points file
