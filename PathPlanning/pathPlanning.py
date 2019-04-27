@@ -56,7 +56,7 @@ def travelingSalesman(start_point, point_list, mapping_function = euclideanDist,
     def heuristicTravelingSalesman():
         curr_point = start_point
         while point_list:
-            point_dist_list = [[point, euclideanDist(curr_point, point)] for point in point_list]
+            point_dist_list = [[point, mapping_function(curr_point, point)] for point in point_list]
             closest_point = min(point_dist_list, key=itemgetter(1))[0]
             point_list.remove(closest_point)
             curr_point = closest_point
@@ -233,13 +233,16 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
 
     point_cost_paths = {}
     for source in [start_point] + sensor_nodes:
-        point_cost_paths[pointToString(source)] = dijkstra(graph, getGridPointFromPoint(source))
+        point_cost_paths[pointToString(getGridPointFromPoint(source))] = dijkstra(graph, getGridPointFromPoint(source))
 
     def getDist(first_point, second_point):
+        # Convert points to grid
+        first_point = getGridPointFromPoint(first_point)
+        second_point = getGridPointFromPoint(second_point)
         # Find first point in point_cost_paths
         for key in point_cost_paths:
             if key == pointToString(first_point):
-                return point_cost_paths[key][pointToString(second_point)]
+                return point_cost_paths[key][pointToString(second_point)][1]
 
     def getRepPointFromGrid(grid_loc):
         grid_loc = [int(x) for x in grid_loc.split(',')]
@@ -249,11 +252,11 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
 
     def calcNewPathFromPathAndGrid():
         new_path = []
-        curr_point = start_point
+        curr_point = getGridPointFromPoint(start_point)
         for point in ts_path + [start_point]:
             for grid_point in point_cost_paths[pointToString(curr_point)][pointToString(getGridPointFromPoint(point))][0]:
                 new_path.append(getRepPointFromGrid(grid_point))
-            curr_point = point
+            curr_point = getGridPointFromPoint(point)
         return new_path
 
     def heuristicObstacleTS():
