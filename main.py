@@ -28,7 +28,9 @@ def SimulationFlow():
     # Regular traveling salesman
     # path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
     # Adapted traveling salesman
-    path = list(pathPlanning.advancedTravelingSalesman(start_point, sensor_coords_with_radius))
+    # path = list(pathPlanning.advancedTravelingSalesman(start_point, sensor_coords_with_radius))
+    # Obstacle traveling salesman
+    path = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes)
     # Generate Path File
     SimulationGenerator.generatePathFile(path)
 
@@ -44,7 +46,9 @@ def WaypointFlow():
     # Regular traveling salesman
     # path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
     # Adapted traveling salesman
-    path = list(pathPlanning.advancedTravelingSalesman(start_point, sensor_coords_with_radius))
+    # path = list(pathPlanning.advancedTravelingSalesman(start_point, sensor_coords_with_radius))
+    # Obstacle traveling salesman
+    path = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes)
     # Create waypoint file
     file.createWaypointFile(start_point, path)
 
@@ -52,7 +56,3 @@ if __name__ == "__main__":
     # Different flows we can execute
     # WaypointFlow()
     SimulationFlow()
-    # start_point = FlowHelper.getStartPointFromCsv()
-    # sensor_coords, sensor_coords_with_radius = FlowHelper.getSensorPointsFromCsv()
-    # obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
-    # pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes)

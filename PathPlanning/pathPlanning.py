@@ -9,10 +9,11 @@ class TravelingSalesmanTypes(Enum):
     BruteForce = 2
 
 # Regular path planning for points
-def travelingSalesman(start_point, point_list, alg_type=TravelingSalesmanTypes.Heuristic):
 
-    def euclideanDist(first_point, second_point):
-        return ((first_point[0] - second_point[0])**2 + (first_point[1] - second_point[1])**2)**0.5
+def euclideanDist(first_point, second_point):
+    return ((first_point[0] - second_point[0])**2 + (first_point[1] - second_point[1])**2)**0.5
+
+def travelingSalesman(start_point, point_list, mapping_function = euclideanDist, alg_type=TravelingSalesmanTypes.Heuristic):
 
     def bruteForceTravelingSalesman():
         paths = []
@@ -31,12 +32,13 @@ def travelingSalesman(start_point, point_list, alg_type=TravelingSalesmanTypes.H
 
             return permute(point_list, 0, len(point_list) - 1)
         def getPathCost(point_list):
-            cost = euclideanDist(start_point, point_list[0])
+            cost = mapping_function(start_point, point_list[0])
             curr_point = point_list[0]
             point_list.remove(point_list[0])
             for point in point_list:
-                cost += euclideanDist(curr_point, point)
+                cost += mapping_function(curr_point, point)
                 curr_point = point
+            cost += mapping_function(point_list[len(point_list) - 1], start_point)
             return cost
 
         getAllPointPermutations(point_list.copy())
@@ -66,15 +68,15 @@ def travelingSalesman(start_point, point_list, alg_type=TravelingSalesmanTypes.H
         return bruteForceTravelingSalesman()
 
 # Adapted path planning for points with radii
-def advancedTravelingSalesman(start_point, point_radius_list, alg_type=TravelingSalesmanTypes.Heuristic):
+def advancedTravelingSalesman(start_point, point_radius_list, mapping_function = euclideanDist, alg_type=TravelingSalesmanTypes.Heuristic):
     def createNodes():
         return GeoHelpers.getIntersectionPointsForShapes(point_radius_list)
     def bruteForceAdvancedTS():
         node_points = list(createNodes())
-        return travelingSalesman(start_point, node_points, TravelingSalesmanTypes.BruteForce)
+        return travelingSalesman(start_point, node_points, mapping_function, TravelingSalesmanTypes.BruteForce)
     def heuristicAdvancedTS():
         node_points = list(createNodes())
-        return travelingSalesman(start_point, node_points, TravelingSalesmanTypes.Heuristic)
+        return travelingSalesman(start_point, node_points, mapping_function, TravelingSalesmanTypes.Heuristic)
 
     if alg_type == TravelingSalesmanTypes.Heuristic:
         return heuristicAdvancedTS()
@@ -96,10 +98,10 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
     grid_size = path_planning_algorithm_config["Grid Size"]
     # Each node will be of type box
     lx, ly, ux, uy = GeoHelpers.calcLimitsFromPoints(node_points, path_planning_algorithm_config["Grid Coeff"])
+    x_step = (ux - lx) / grid_size
+    y_step = (uy - ly) / grid_size
 
     def calcDistances():
-        x_step = (ux - lx) / grid_size
-        y_step = (uy - ly) / grid_size
         x_dist = x_step
         y_dist = y_step
         diagonal_dist = (x_step**2 + y_step**2)**0.5
@@ -129,42 +131,140 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
 
         return graph, start_point_coords
 
-    def getNeighbours(node):
-        # X neighbors
-        if node[0] + 1 < grid_size:
-            yield [[node[0] + 1, node[1]], x_dist]
-        if node[0] - 1 >= 0:
-            yield [[node[0] - 1, node[1]], x_dist]
-        # Y neighbors
-        if node[1] + 1 < grid_size:
-            yield [[node[0], node[1] + 1], y_dist]
-        if node[1] - 1 >= 0:
-            yield [[node[0], node[1] - 1], y_dist]
-        # Diagonal neighbors
-        if node[0] + 1 < grid_size and node[1] + 1 < grid_size:
-            yield [[node[0] + 1, node[1] + 1], diagonal_dist]
-        if node[0] + 1 < grid_size and node[1] - 1 >= 0:
-            yield [[node[0] + 1, node[1] - 1], diagonal_dist]
-        if node[0] - 1 >= 0 and node[1] + 1 < grid_size:
-            yield [[node[0] - 1, node[1] + 1], diagonal_dist]
-        if node[0] - 1 >= 0 and node[1] - 1 >= 0:
-            yield [[node[0] - 1, node[1] - 1], diagonal_dist]
+    def getNodeWithMinDist(Q, dist, graph):
+        min_node, min_dist = None, float("inf")
+        for node in Q:
+            if dist[node] < min_dist and graph[node] != 'obstacle':
+                min_dist = dist[node]
+                min_node = node
 
-    def dijkstra(graph, start_point_coords):
-        dist = {}
+        return min_node
+
+    def checkValidGrid(graph):
+        for key in graph:
+            if len(graph[key]) > 1 and 'sensor' in graph[key] and 'obstacle' in graph[key]:
+                raise Exception("Bad grid dimensions. Obstacle and sensor on the same cell")
+            if len(graph[key]) == 1:
+                graph[key] = graph[key][0]
+            else:
+                graph[key] = ""
+        return graph
+
+    def getNeighbors(key, graph, Q):
+        # X neighbors
+        node = [int(i) for i in key.split(',')]
+        point = [node[0] + 1, node[1]]
+        if point[0] < grid_size and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
+            yield [point, x_dist]
+        point = [node[0] - 1, node[1]]
+        if point[0] >= 0 and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
+            yield [point, x_dist]
+        # Y neighbors
+        point = [node[0], node[1] + 1]
+        if point[1] < grid_size and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
+            yield [point, y_dist]
+        point = [node[0], node[1] - 1]
+        if point[1] >= 0 and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
+            yield [point, y_dist]
+        # Diagonal neighbors
+        point = [node[0] + 1, node[1] + 1]
+        if point[0] < grid_size and point[1] < grid_size and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
+            yield [point, diagonal_dist]
+        point = [node[0] + 1, node[1] - 1]
+        if point[0] < grid_size and point[1] >= 0 and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
+            yield [point, diagonal_dist]
+        point = [node[0] - 1, node[1] + 1]
+        if point[0] >= 0 and point[1] < grid_size and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
+            yield [point, diagonal_dist]
+        point = [node[0] - 1, node[1] - 1]
+        if point[0] >= 0 and point[1] >= 0 and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
+            yield [point, diagonal_dist]
+
+    def dijkstra(graph, source):
+        dist, prev, Q = {}, {}, []
         for key in graph:
             dist[key] = float("inf")
+            prev[key] = None
+            Q.append(key)
 
-        dist[str(start_point_coords[0]) + "," + str(start_point_coords[1])] = 0
-        curr_node = start_point_coords
-        while graph:
-            neighbors = list(getNeighbours(curr_node))
+        # Calculate targets dynamically.
+        # targets = (start_point + sensor_points) - start_point_coords
+        targets = []
+        dist[pointToString(source)] = 0
+        while Q:
+            u = getNodeWithMinDist(Q, dist, graph)
+            # If only obstacle nodes are left
+            if u is None:
+                break
+
+            Q.remove(u)
+            if u != pointToString(source) and (graph[u] == 'sensor' or graph[u] == 'start'):
+                targets.append(u)
+
+            neighbors = list(getNeighbors(u, graph, Q))
             for neighbor in neighbors:
                 neighbor_coord, neighbor_dist = neighbor
-                # get closest neighbor, continue dijkstra from here tomorrow
+                alt = dist[u] + neighbor_dist
+                if alt < dist[pointToString(neighbor_coord)]:
+                    dist[pointToString(neighbor_coord)] = alt
+                    prev[pointToString(neighbor_coord)] = u
 
+        # Get shortest path to each of the other nodes from source node
+        target_paths = {}
+        for target in targets:
+            S = []
+            u = target
+            if prev[u] or u == source:
+                while u:
+                    S.append(u)
+                    u = prev[u]
+            S.reverse()
+            target_paths[target] = [S, dist[target]]
+
+        return target_paths
 
     graph, start_point_coords = createGraph()
-    # From start point to any other point
-    dijkstra(graph, start_point_coords)
-    print("x")
+    graph = checkValidGrid(graph)
+
+    def getGridPointFromPoint(point):
+        grid_x = int((point[1] - lx) / (ux - lx) * grid_size)
+        grid_y = int((point[0] - ly) / (uy - ly) * grid_size)
+        return [grid_x, grid_y]
+
+    point_cost_paths = {}
+    for source in [start_point] + sensor_nodes:
+        point_cost_paths[pointToString(source)] = dijkstra(graph, getGridPointFromPoint(source))
+
+    def getDist(first_point, second_point):
+        # Find first point in point_cost_paths
+        for key in point_cost_paths:
+            if key == pointToString(first_point):
+                return point_cost_paths[key][pointToString(second_point)]
+
+    def getRepPointFromGrid(grid_loc):
+        grid_loc = [int(x) for x in grid_loc.split(',')]
+        rep_x = lx + grid_loc[0] * x_step + x_step / 2
+        rep_y = ly + grid_loc[1] * y_step + y_step / 2
+        return [rep_y, rep_x]
+
+    def calcNewPathFromPathAndGrid():
+        new_path = []
+        curr_point = start_point
+        for point in ts_path + [start_point]:
+            for grid_point in point_cost_paths[pointToString(curr_point)][pointToString(getGridPointFromPoint(point))][0]:
+                new_path.append(getRepPointFromGrid(grid_point))
+            curr_point = point
+        return new_path
+
+    def heuristicObstacleTS():
+        return travelingSalesman(start_point, sensor_nodes, getDist, TravelingSalesmanTypes.Heuristic)
+    def bruteForceObstacleTS():
+        return travelingSalesman(start_point, sensor_nodes, getDist, TravelingSalesmanTypes.BruteForce)
+
+    if alg_type == TravelingSalesmanTypes.Heuristic:
+        ts_path = list(heuristicObstacleTS())
+        return calcNewPathFromPathAndGrid()
+
+    if alg_type == TravelingSalesmanTypes.BruteForce:
+        ts_path = list(bruteForceObstacleTS())
+        return calcNewPathFromPathAndGrid()
