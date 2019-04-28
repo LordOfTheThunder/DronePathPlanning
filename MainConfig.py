@@ -11,6 +11,7 @@ path_plans_config = {
 waypoint_config = {
     "Default Alt" : 100,
     "Columns" : "<INDEX> <CURRENT WP> <COORD FRAME> <COMMAND> <PARAM1> <PARAM2> <PARAM3> <PARAM4> <PARAM5/X/LONGITUDE> <PARAM6/Y/LATITUDE> <PARAM7/Z/ALTITUDE> <AUTOCONTINUE>",
+    "Relative Path" : "./output/",
     "File Name" : "path_planning.waypoints",
     "First Row" : "QGC WPL",
     "Version" : "110",
@@ -23,6 +24,7 @@ waypoint_config = {
 }
 
 global_config = {
+    "Relative Path" : "./input/",
     "Start Point CSV" : "start_point.csv",
     "Sensor Point CSV" : "sensor_positions.csv",
     "Obstacles Bbox CSV" : "obstacle_bboxes.csv",
