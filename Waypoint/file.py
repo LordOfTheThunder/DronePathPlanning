@@ -8,7 +8,8 @@ def createWaypointFile(start_point, point_list):
     first_row = waypoint_config["First Row"].split(' ')
     first_row.append(waypoint_config["Version"])
 
-    with open(waypoint_config["File Name"], 'w') as fh:
+    file = waypoint_config["Relative Path"] + waypoint_config["File Name"]
+    with open(file, 'w') as fh:
         writer = csv.writer(fh, delimiter='\t')
         writer.writerow([' '.join(first_row)])
     fh.close()
@@ -65,5 +66,5 @@ def createWaypointFile(start_point, point_list):
         exit(1)
     df = pd.DataFrame(data)
     # Write all to csv
-    df.to_csv(waypoint_config["File Name"], sep='\t', header=False, mode='a')
-    logger.info('Generated Waypoint File at ' + waypoint_config["File Name"])
+    df.to_csv(file, sep='\t', header=False, mode='a')
+    logger.info('Generated Waypoint File at ' + file)
