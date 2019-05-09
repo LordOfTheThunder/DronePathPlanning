@@ -35,7 +35,8 @@ def SimulationFlow():
     # Obstacle traveling salesman
     # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes)
     # Obstacle traveling salesman with dynamic algorithm
-    path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.HeuristicDynamic)
+    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.HeuristicDynamic)
+    path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.BruteForceDynamic)
     logger.info("Total dist is: " + str(dist))
     # Generate Path File
     SimulationGenerator.generatePathFile(path)
@@ -56,7 +57,9 @@ def WaypointFlow():
     # Obstacle traveling salesman
     # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes)
     # Obstacle traveling salesman with dynamic algorithm
-    path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.HeuristicDynamic)
+    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.HeuristicDynamic)
+    path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes,
+                                                        TravelingSalesmanTypes.BruteForceDynamic)
     # Create waypoint file
     file.createWaypointFile(start_point, path)
 

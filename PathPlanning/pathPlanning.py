@@ -109,6 +109,7 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
 
     def calcDist(point):
         point_cost_paths[pathPlanningHelpers.pointToString(getGridPointFromPoint(point))] = Graph.dijkstra(graph, getGridPointFromPoint(point))
+        return point_cost_paths[pathPlanningHelpers.pointToString(getGridPointFromPoint(point))]
 
     def getDist(first_point, second_point):
         # Convert points to grid
@@ -126,10 +127,9 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
         first_point_str = pathPlanningHelpers.pointToString(first_point_grid)
         second_point_str = pathPlanningHelpers.pointToString(second_point_grid)
         # Check if we already calculated this path previously
-        if first_point_str in point_cost_paths:
-            if second_point_str in point_cost_paths[first_point_str]:
-                # We don't need to calculate new paths
-                return point_cost_paths[first_point_str][second_point_str]
+        if first_point_str in point_cost_paths and second_point_str in point_cost_paths[first_point_str]:
+            # We don't need to calculate new paths
+            return point_cost_paths[first_point_str][second_point_str]
         else:
             # We need to build new graph and calculate paths and update them in point_cost_path
             dynamic_nodes = []
@@ -176,7 +176,7 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
     def heuristicDynamicObstacleTS():
         return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.HeuristicDynamic)
     def bruteForceDynamicObstacleTS():
-        return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.BruteForceDynamic)
+        return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.BruteForceDynamic, getRepPointFromGrid, calcDist)
 
     if alg_type == TravelingSalesmanTypes.Heuristic:
         ts_path = list(heuristicObstacleTS())
@@ -191,13 +191,54 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
         return calcNewPathFromPathAndGrid()
 
     if alg_type == TravelingSalesmanTypes.BruteForceDynamic:
-        ts_path = list(bruteForceDynamicObstacleTS())
-        return calcNewPathFromPathAndGrid()
+        # For this one path is already calculated
+        return bruteForceDynamicObstacleTS()
 
-def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, alg_type=TravelingSalesmanTypes.HeuristicDynamic):
+def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, alg_type=TravelingSalesmanTypes.HeuristicDynamic, grid_to_point_func=None, calcDist=None):
 
     def bruteForceTravelingSalesman():
-        pass
+        # Setup groups of intersecting sensors given a group of point radius list
+        groups = GeoHelpers.getShapeGroups(point_radius_list)
+        groups += GeoHelpers.getCirclesNotInIntersections(point_radius_list)
+
+        path = []
+        path_dist = float("inf")
+
+        def findPathRecursively(groups, curr_path=None, curr_path_dist=0, new_point_radius_list=point_radius_list, curr_point=start_point):
+            nonlocal path_dist, path
+            if not curr_path:
+                curr_path = []
+            if not groups:
+                # Calculate path from last point to start point
+                path_to_start, cost_to_start = calcDist(curr_point)[curr_path[0]]
+                curr_path_dist += cost_to_start
+                curr_path += path_to_start
+                if curr_path_dist < path_dist:
+                    path_dist = curr_path_dist
+                    path = curr_path
+                return
+            for group in groups:
+                next_point = GeoHelpers.getClosestPointFromPointToShape(Point(curr_point[0], curr_point[1]), group[0])
+                path_and_cost_to_next_point = mapping_function(curr_point,
+                                 GeoHelpers.getClosestPointFromPointToShape(Point(curr_point[0], curr_point[1]),
+                                                                            group[0]), groups)
+                curr_path += path_and_cost_to_next_point[0]
+                curr_path_dist += path_and_cost_to_next_point[1]
+                curr_point = list(next_point)
+
+                # Recalculate groups based on what we removed and go in recursively
+                for group_lm in group[1]:
+                    for point in new_point_radius_list:
+                        point_obj = Point(point[0], point[1])
+                        if point_obj.within(group_lm):
+                            new_point_radius_list.remove(point)
+                groups_alt = GeoHelpers.getShapeGroups(new_point_radius_list)
+                groups_alt += GeoHelpers.getCirclesNotInIntersections(new_point_radius_list)
+                findPathRecursively(groups_alt, curr_path.copy(), curr_path_dist, new_point_radius_list.copy(), curr_point)
+
+        findPathRecursively(groups)
+        path = [grid_to_point_func(grid_point) for grid_point in path]
+        return path, path_dist
 
     def heuristicTravelingSalesman():
         # Setup groups of intersecting sensors given a group of point radius list
