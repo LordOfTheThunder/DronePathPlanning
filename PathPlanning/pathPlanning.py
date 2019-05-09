@@ -8,6 +8,8 @@ from shapely.geometry import Point
 class TravelingSalesmanTypes(Enum):
     Heuristic = 1
     BruteForce = 2
+    HeuristicDynamic = 3
+    BruteForceDynamic = 4
 
 # Regular path planning for points
 
@@ -168,10 +170,13 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
         return new_path, total_length
 
     def heuristicObstacleTS():
-        # return travelingSalesman(start_point, sensor_nodes, getDist, TravelingSalesmanTypes.Heuristic)
-        return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.Heuristic)
+        return travelingSalesman(start_point, sensor_nodes, getDist, TravelingSalesmanTypes.Heuristic)
     def bruteForceObstacleTS():
         return travelingSalesman(start_point, sensor_nodes, getDist, TravelingSalesmanTypes.BruteForce)
+    def heuristicDynamicObstacleTS():
+        return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.HeuristicDynamic)
+    def bruteForceDynamicObstacleTS():
+        return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.BruteForceDynamic)
 
     if alg_type == TravelingSalesmanTypes.Heuristic:
         ts_path = list(heuristicObstacleTS())
@@ -181,7 +186,15 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
         ts_path = list(bruteForceObstacleTS())
         return calcNewPathFromPathAndGrid()
 
-def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, alg_type=TravelingSalesmanTypes.Heuristic):
+    if alg_type == TravelingSalesmanTypes.HeuristicDynamic:
+        ts_path = list(heuristicDynamicObstacleTS())
+        return calcNewPathFromPathAndGrid()
+
+    if alg_type == TravelingSalesmanTypes.BruteForceDynamic:
+        ts_path = list(bruteForceDynamicObstacleTS())
+        return calcNewPathFromPathAndGrid()
+
+def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, alg_type=TravelingSalesmanTypes.HeuristicDynamic):
 
     def bruteForceTravelingSalesman():
         pass
@@ -218,7 +231,7 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
             groups = GeoHelpers.getShapeGroups(new_point_list_radius)
             groups += GeoHelpers.getCirclesNotInIntersections(new_point_list_radius)
 
-    if alg_type == TravelingSalesmanTypes.Heuristic:
+    if alg_type == TravelingSalesmanTypes.HeuristicDynamic:
         return heuristicTravelingSalesman()
-    if alg_type == TravelingSalesmanTypes.BruteForce:
+    if alg_type == TravelingSalesmanTypes.BruteForceDynamic:
         return bruteForceTravelingSalesman()
