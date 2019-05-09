@@ -154,20 +154,23 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
 
         total_length = 0
 
-        for point in ts_path:
+        for action, point in ts_path:
             path_dist = point_cost_paths[pathPlanningHelpers.pointToString(curr_point)][
                 pathPlanningHelpers.pointToString(getGridPointFromPoint(point))]
             total_length += path_dist[1]
             for grid_point in path_dist[0]:
-                new_path.append(getRepPointFromGrid(grid_point))
+                new_path.append(["go", getRepPointFromGrid(grid_point)])
+            # stop at last point
+            new_path[-1][0] = "stop"
             curr_point = getGridPointFromPoint(point)
 
         # Calculate path from last point to start point
-        calcDist(ts_path[-1])
+        last_action, last_coord = ts_path[-1]
+        calcDist(last_coord)
         path_dist = point_cost_paths[pathPlanningHelpers.pointToString(curr_point)][pathPlanningHelpers.pointToString(getGridPointFromPoint(start_point))]
         total_length += path_dist[1]
         for grid_point in path_dist[0]:
-            new_path.append(getRepPointFromGrid(grid_point))
+            new_path.append(["go", getRepPointFromGrid(grid_point)])
         return new_path, total_length
 
     def heuristicObstacleTS():
@@ -204,9 +207,10 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
 
         path = []
         path_dist = float("inf")
+        stop_points = []
 
         def findPathRecursively(groups, curr_path=None, curr_path_dist=0, new_point_radius_list=point_radius_list, curr_point=start_point):
-            nonlocal path_dist, path
+            nonlocal path_dist, path, stop_points
             if not curr_path:
                 curr_path = []
             if not groups:
@@ -224,6 +228,7 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
                                  GeoHelpers.getClosestPointFromPointToShape(Point(curr_point[0], curr_point[1]),
                                                                             group[0]), groups)
                 curr_path += path_and_cost_to_next_point[0]
+                stop_points.append(curr_path[-1])
                 curr_path_dist += path_and_cost_to_next_point[1]
                 curr_point = list(next_point)
 
@@ -238,8 +243,15 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
                 findPathRecursively(groups_alt, curr_path.copy(), curr_path_dist, new_point_radius_list.copy(), curr_point)
 
         findPathRecursively(groups)
-        path = [grid_to_point_func(grid_point) for grid_point in path]
-        return path, path_dist
+        # Update path based on stop points
+        new_path = []
+        for point in path:
+            if point in stop_points:
+                new_path.append(["stop", point])
+            else:
+                new_path.append(["go", point])
+        new_path = [[action_point[0], grid_to_point_func(action_point[1])] for action_point in new_path]
+        return new_path, path_dist
 
     def heuristicTravelingSalesman():
         # Setup groups of intersecting sensors given a group of point radius list
@@ -263,7 +275,7 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
                     min_path = curr_path_dist
 
             curr_point = list(closest_point)
-            yield curr_point
+            yield ["stop", curr_point]
             # Recalculate groups
             for group_lm in group_to_remove[1]:
                 for point in new_point_list_radius:
