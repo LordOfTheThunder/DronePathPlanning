@@ -18,7 +18,8 @@ waypoint_config = {
     "Commands" : {
         "WAYPOINT" : 16,
         "LOITER_TIME" : 19,
-        "RETURN_TO_LAUNCH" : 20
+        "RETURN_TO_LAUNCH" : 20,
+        "TAKEOFF" : 22,
     },
     "Default Path Plan" : path_plans_config["Follow Points"],
     "Default Coord Frame" : 3,

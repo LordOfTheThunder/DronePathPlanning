@@ -49,6 +49,11 @@ def createWaypointFile(start_point, point_list):
                    start_point[0], start_point[1],
                    waypoint_config["Default Alt"], 1]
     data = createWaypointRowMap(first_point)
+    # Add takeoff command
+    takeoff_point = [1, 0, waypoint_config["Commands"]["TAKEOFF"], 0, 0, 0, 0,
+                   start_point[0], start_point[1],
+                   waypoint_config["Default Alt"], 1]
+    data = appendToWaypointRowMap(data, takeoff_point)
 
     # Build other points according to path plan
     if waypoint_config["Default Path Plan"] == path_plans_config["Follow Points"]:
