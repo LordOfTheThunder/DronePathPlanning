@@ -27,7 +27,6 @@ def SimulationFlow():
     # Generate grid file
     SimulationGenerator.generateGridFile(start_point, sensor_coords_with_radius)
     # Calculate path with traveling salesman
-
     # Regular traveling salesman
     # path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
     # Adapted traveling salesman
@@ -58,8 +57,7 @@ def WaypointFlow():
     # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes)
     # Obstacle traveling salesman with dynamic algorithm
     # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.HeuristicDynamic)
-    path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes,
-                                                        TravelingSalesmanTypes.BruteForceDynamic)
+    path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.BruteForceDynamic)
     # Create waypoint file
     file.createWaypointFile(start_point, path)
 

@@ -23,6 +23,8 @@ waypoint_config = {
     "Default Path Plan" : path_plans_config["Follow Points"],
     "Default Coord Frame" : 3,
     "Default Loiter Time" : 5,
+    "stop command" : "stop",
+    "go command" : "go",
 }
 
 global_config = {

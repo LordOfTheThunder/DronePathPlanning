@@ -1,7 +1,7 @@
 from operator import itemgetter
 from enum import Enum
 from Geo import GeoHelpers
-from MainConfig import path_planning_algorithm_config
+from MainConfig import path_planning_algorithm_config, waypoint_config
 from PathPlanning import Graph, pathPlanningHelpers
 from shapely.geometry import Point
 
@@ -53,7 +53,7 @@ def travelingSalesman(start_point, point_list, mapping_function = euclideanDist,
                 min_cost = current_cost
                 min_path = path
 
-        min_path = [["stop", point] for point in min_path]
+        min_path = [[waypoint_config["stop command"], point] for point in min_path]
         return min_path
 
 
@@ -64,7 +64,7 @@ def travelingSalesman(start_point, point_list, mapping_function = euclideanDist,
             closest_point = min(point_dist_list, key=itemgetter(1))[0]
             point_list.remove(closest_point)
             curr_point = closest_point
-            yield ["stop", closest_point]
+            yield [waypoint_config["stop command"], closest_point]
 
     if alg_type == TravelingSalesmanTypes.Heuristic:
         return heuristicTravelingSalesman()
@@ -159,9 +159,9 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
                 pathPlanningHelpers.pointToString(getGridPointFromPoint(point))]
             total_length += path_dist[1]
             for grid_point in path_dist[0]:
-                new_path.append(["go", getRepPointFromGrid(grid_point)])
+                new_path.append([waypoint_config["go command"], getRepPointFromGrid(grid_point)])
             # stop at last point
-            new_path[-1][0] = "stop"
+            new_path[-1][0] = waypoint_config["stop command"]
             curr_point = getGridPointFromPoint(point)
 
         # Calculate path from last point to start point
@@ -170,7 +170,7 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
         path_dist = point_cost_paths[pathPlanningHelpers.pointToString(curr_point)][pathPlanningHelpers.pointToString(getGridPointFromPoint(start_point))]
         total_length += path_dist[1]
         for grid_point in path_dist[0]:
-            new_path.append(["go", getRepPointFromGrid(grid_point)])
+            new_path.append([waypoint_config["go command"], getRepPointFromGrid(grid_point)])
         return new_path, total_length
 
     def heuristicObstacleTS():
@@ -247,9 +247,9 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
         new_path = []
         for point in path:
             if point in stop_points:
-                new_path.append(["stop", point])
+                new_path.append([waypoint_config["stop command"], point])
             else:
-                new_path.append(["go", point])
+                new_path.append([waypoint_config["go command"], point])
         new_path = [[action_point[0], grid_to_point_func(action_point[1])] for action_point in new_path]
         return new_path, path_dist
 
@@ -275,7 +275,7 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
                     min_path = curr_path_dist
 
             curr_point = list(closest_point)
-            yield ["stop", curr_point]
+            yield [waypoint_config["stop command"], curr_point]
             # Recalculate groups
             for group_lm in group_to_remove[1]:
                 for point in new_point_list_radius:
