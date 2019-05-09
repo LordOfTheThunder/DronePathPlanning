@@ -51,15 +51,18 @@ def generateSensorPointsFile(sensor_positions):
 def generatePathFile(path):
     path_point_path = simulation_config["Relative Path"] + simulation_config["Path File"]
     with open(path_point_path, 'w') as fh:
-        fh.write("var path_points = " + "[")
+        first_line = "var path_points = " + "["
+        second_line = "var path_actions = " + "["
         cnt = len(path)
         last_space = ", "
-        for point in path:
+        for action, point in path:
             if cnt == 1:
                 last_space = ""
-            fh.write("[" + str(point[0]) + "," + str(point[1]) + "]" + last_space)
+            first_line += "[" + str(point[0]) + "," + str(point[1]) + "]" + last_space
+            second_line += "[\"" + action + "\"]" + last_space
             cnt -= 1
-        fh.write("]")
+        fh.write(first_line + "]\n")
+        fh.write(second_line + "]\n")
     fh.close()
     logger.info('Generated Path File at ' + path_point_path)
 

@@ -258,6 +258,7 @@ function drawPath() {
   ctx.beginPath();
   ctx.strokeStyle = "#5F0505"
   var curr_cord = translated_path_coordinates[draw_pos];
+  var curr_action = path_actions[draw_pos];
   var next_cord = translated_path_coordinates[++draw_pos];
   var curr_x = curr_cord[0];
   var curr_y = curr_cord[1];
@@ -277,6 +278,17 @@ function drawPath() {
 	ctx.fillText(draw_pos, (curr_x + next_x) / 2, (curr_y + next_y) / 2);
 	  
 	ctx.restore();
+  }
+  
+  if (curr_action == "stop") {
+	// Draw Pause text
+	ctx.save();
+
+	ctx.font = "bold " + path_ordering_text_size + "px Arial";
+	ctx.fillStyle = "#3be200"
+	ctx.fillText("Waiting", next_x, next_y - 20);
+
+	ctx.restore();  
   }
 }
 
