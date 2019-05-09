@@ -1,6 +1,10 @@
-from shapely.geometry import Point
+from shapely.geometry import Point, LineString, mapping
 import numpy as np
+from operator import itemgetter
+from MainConfig import geo_config
 
+def euclideanDist(first_point, second_point):
+    return ((first_point[0] - second_point[0])**2 + (first_point[1] - second_point[1])**2)**0.5
 
 def getCircleObjectsFromList(point_radius_list):
     # Get all circle objects
@@ -8,6 +12,7 @@ def getCircleObjectsFromList(point_radius_list):
         p = Point(x_y_radius[0], x_y_radius[1])
         circle = p.buffer(x_y_radius[2])
         yield circle
+
 
 def getIntersectionsFromCircles(pols):
     intersections = []
@@ -29,8 +34,25 @@ def getIntersectionsFromCircles(pols):
 
     return intersections
 
-def getIntersectionRepresentativePointsFromCircles(pols):
-    intersections = []
+# Given a point and an intersection/sensor shape we would like to get a point inside the shape which is the closest
+# to our original point
+def getClosestPointFromPointToShape(point, shape):
+    # Create line shape from point and center of shape
+    center_of_shape = shape.representative_point()
+    line = LineString([(point.x, point.y), (center_of_shape.x, center_of_shape.y)])
+
+    intersection_coordinates = mapping(line.intersection(shape).boundary)['coordinates']
+    closest_point = min([[euclideanDist([point.x, point.y], inter_point), inter_point] for inter_point in intersection_coordinates],
+                        key=itemgetter(0))[1]
+    # Get a little closer to the inside.
+    delta_x = (center_of_shape.x - closest_point[0]) * geo_config["Relative point coeff"]
+    delta_y = (center_of_shape.y - closest_point[1]) * geo_config["Relative point coeff"]
+    closest_point = [closest_point[0] + delta_x, closest_point[1] + delta_y]
+    return closest_point
+
+def getShapeGroups(point_radius_list):
+    pols = list(getCircleObjectsFromList(point_radius_list))
+    intersections = []  # List of tuples
     for i in range(len(pols)):
         for j in range(i + 1, len(pols)):
             pol_1 = pols[i]
@@ -41,17 +63,23 @@ def getIntersectionRepresentativePointsFromCircles(pols):
             # Check if we already have an intersection which takes this
             exists = False
             for s in range(len(intersections)):
-                if curr_int.intersects(intersections[s]):
-                    intersections[s] = curr_int.intersection(intersections[s])
+                if curr_int.intersects(intersections[s][0]):
+                    intersections[s] = [curr_int.intersection(intersections[s][0]), intersections[s][1] + [pol_2]]
                     exists = True
             if not exists:
-                intersections.append(curr_int)
+                intersections.append([curr_int, [pol_1, pol_2]])
 
-    for int in intersections:
-        yield int.representative_point()
+    return intersections
 
-def getCirclePointsNotInIntersection(pols):
-    circles = list(getCircleObjectsFromList(pols))
+def getIntersectionRepresentativePointsFromCircles(point_radius_list):
+    shape_groups = getShapeGroups(point_radius_list)
+
+    for group in shape_groups:
+        yield group[0].representative_point()
+
+# returning tuples to have similar format to shpae groups
+def getCirclesNotInIntersections(point_radius_list):
+    circles = list(getCircleObjectsFromList(point_radius_list))
     intersections = getIntersectionsFromCircles(circles)
     circles_tmp = circles.copy()
     ret = []
@@ -62,13 +90,20 @@ def getCirclePointsNotInIntersection(pols):
                 if circle in circles_tmp:
                     circles_tmp.remove(circle)
     for circle in circles_tmp:
-        ret.append(circle.representative_point())
+        ret.append([circle, [circle]])
+
+    return ret
+
+def getCirclePointsNotInIntersection(point_radius_list):
+    circles = getCirclesNotInIntersections(point_radius_list)
+    ret = []
+    for circle in circles:
+        ret.append(circle[0].representative_point())
 
     return ret
 
 def getIntersectionPointsForShapes(point_radius_list):
-    circles = list(getCircleObjectsFromList(point_radius_list))
-    node_points = list(getIntersectionRepresentativePointsFromCircles(circles))
+    node_points = list(getIntersectionRepresentativePointsFromCircles(point_radius_list))
     node_points += getCirclePointsNotInIntersection(point_radius_list)
     for point in node_points:
         yield [point.x, point.y]
@@ -97,3 +132,9 @@ def getGraphFromPointLimits(lx, ly, ux, uy, grid_size):
             graph[str(idx) + "," + str(idy)] = []
 
     return graph
+
+def calcDistances(x_step, y_step):
+    x_dist = x_step
+    y_dist = y_step
+    diagonal_dist = (x_step**2 + y_step**2)**0.5
+    return x_dist, y_dist, diagonal_dist

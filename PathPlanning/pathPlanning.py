@@ -2,6 +2,7 @@ from operator import itemgetter
 from enum import Enum
 from Geo import GeoHelpers
 from MainConfig import path_planning_algorithm_config
+from PathPlanning import Graph, pathPlanningHelpers
 from shapely.geometry import Point
 
 class TravelingSalesmanTypes(Enum):
@@ -83,166 +84,60 @@ def advancedTravelingSalesman(start_point, point_radius_list, mapping_function =
     if alg_type == TravelingSalesmanTypes.BruteForce:
         return bruteForceAdvancedTS()
 
+point_cost_paths = {}
+
 def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, alg_type=TravelingSalesmanTypes.Heuristic):
-
-    def pointToString(point):
-        return str(point[0]) + "," + str(point[1])
-
-    def createNodes():
-        return GeoHelpers.getIntersectionPointsForShapes(point_radius_list)
-
     # Create grid from points - calculate map bl and ur and divide by grid size for nodes
-    sensor_nodes = list(createNodes())
+    sensor_nodes = list(Graph.createNodes(point_radius_list))
     node_points = sensor_nodes.copy()
     node_points.append(start_point)
     grid_size = path_planning_algorithm_config["Grid Size"]
     # Each node will be of type box
-    lx, ly, ux, uy = GeoHelpers.calcLimitsFromPoints(node_points, path_planning_algorithm_config["Grid Coeff"])
+    board_limits = lx, ly, ux, uy = GeoHelpers.calcLimitsFromPoints(node_points, path_planning_algorithm_config["Grid Coeff"])
     x_step = (ux - lx) / grid_size
     y_step = (uy - ly) / grid_size
 
-    def calcDistances():
-        x_dist = x_step
-        y_dist = y_step
-        diagonal_dist = (x_step**2 + y_step**2)**0.5
-        return x_dist, y_dist, diagonal_dist
-
-    x_dist, y_dist, diagonal_dist = calcDistances()
-
-    def createGraph():
-        graph = GeoHelpers.getGraphFromPointLimits(lx, ly, ux, uy, grid_size)
-        # Find target nodes in which our node points are located
-        start_point_coords = [(int((start_point[1] - lx) / (ux - lx) * grid_size)),
-                              int((start_point[0] - ly) / (uy - ly) * grid_size)]
-        graph[pointToString(start_point_coords)].append("start")
-        for sensor_node in sensor_nodes:
-            graph[pointToString([int((sensor_node[1] - lx) / (ux - lx) * grid_size),
-                                        int((sensor_node[0] - ly) / (uy - ly) * grid_size)])].append("sensor")
-        # Find nodes in which we have obstacles
-        for bbox in obstacle_bboxes:
-            ll, ur = [bbox[0], bbox[1]], [bbox[2], bbox[3]]
-            bbox_lx = int((ll[1] - lx) / (ux - lx) * grid_size)
-            bbox_ux = int((ur[1] - lx) / (ux - lx) * grid_size)
-            bbox_ly = int((ll[0] - ly) / (uy - ly) * grid_size)
-            bbox_uy = int((ur[0] - ly) / (uy - ly) * grid_size)
-            for i in range(bbox_lx, bbox_ux + 1):
-                for j in range(bbox_ly, bbox_uy + 1):
-                    graph[pointToString([i, j])].append("obstacle")
-
-        return graph, start_point_coords
-
-    def getNodeWithMinDist(Q, dist, graph):
-        min_node, min_dist = None, float("inf")
-        for node in Q:
-            if dist[node] < min_dist and graph[node] != 'obstacle':
-                min_dist = dist[node]
-                min_node = node
-
-        return min_node
-
-    def checkValidGrid(graph):
-        for key in graph:
-            if len(graph[key]) > 1 and 'sensor' in graph[key] and 'obstacle' in graph[key]:
-                raise Exception("Bad grid dimensions. Obstacle and sensor on the same cell")
-            if len(graph[key]) == 1:
-                graph[key] = graph[key][0]
-            else:
-                graph[key] = ""
-        return graph
-
-    def getNeighbors(key, graph, Q):
-        # X neighbors
-        node = [int(i) for i in key.split(',')]
-        point = [node[0] + 1, node[1]]
-        if point[0] < grid_size and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
-            yield [point, x_dist]
-        point = [node[0] - 1, node[1]]
-        if point[0] >= 0 and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
-            yield [point, x_dist]
-        # Y neighbors
-        point = [node[0], node[1] + 1]
-        if point[1] < grid_size and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
-            yield [point, y_dist]
-        point = [node[0], node[1] - 1]
-        if point[1] >= 0 and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
-            yield [point, y_dist]
-        # Diagonal neighbors
-        point = [node[0] + 1, node[1] + 1]
-        if point[0] < grid_size and point[1] < grid_size and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
-            yield [point, diagonal_dist]
-        point = [node[0] + 1, node[1] - 1]
-        if point[0] < grid_size and point[1] >= 0 and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
-            yield [point, diagonal_dist]
-        point = [node[0] - 1, node[1] + 1]
-        if point[0] >= 0 and point[1] < grid_size and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
-            yield [point, diagonal_dist]
-        point = [node[0] - 1, node[1] - 1]
-        if point[0] >= 0 and point[1] >= 0 and graph[pointToString(point)] != 'obstacle' and pointToString(point) in Q:
-            yield [point, diagonal_dist]
-
-    def dijkstra(graph, source):
-        dist, prev, Q = {}, {}, []
-        for key in graph:
-            dist[key] = float("inf")
-            prev[key] = None
-            Q.append(key)
-
-        # Calculate targets dynamically.
-        # targets = (start_point + sensor_points) - start_point_coords
-        targets = []
-        dist[pointToString(source)] = 0
-        while Q:
-            u = getNodeWithMinDist(Q, dist, graph)
-            # If only obstacle nodes are left
-            if u is None:
-                break
-
-            Q.remove(u)
-            if u != pointToString(source) and (graph[u] == 'sensor' or graph[u] == 'start'):
-                targets.append(u)
-
-            neighbors = list(getNeighbors(u, graph, Q))
-            for neighbor in neighbors:
-                neighbor_coord, neighbor_dist = neighbor
-                alt = dist[u] + neighbor_dist
-                if alt < dist[pointToString(neighbor_coord)]:
-                    dist[pointToString(neighbor_coord)] = alt
-                    prev[pointToString(neighbor_coord)] = u
-
-        # Get shortest path to each of the other nodes from source node
-        target_paths = {}
-        for target in targets:
-            S = []
-            u = target
-            if prev[u] or u == source:
-                while u:
-                    S.append(u)
-                    u = prev[u]
-            S.reverse()
-            target_paths[target] = [S, dist[target]]
-
-        return target_paths
-
-    graph, start_point_coords = createGraph()
-    graph = checkValidGrid(graph)
+    graph, start_point_coords = Graph.createGraph(start_point, sensor_nodes, obstacle_bboxes, board_limits)
+    graph = Graph.checkValidGrid(graph)
 
     def getGridPointFromPoint(point):
         grid_x = int((point[1] - lx) / (ux - lx) * grid_size)
         grid_y = int((point[0] - ly) / (uy - ly) * grid_size)
         return [grid_x, grid_y]
 
-    point_cost_paths = {}
-    for source in [start_point] + sensor_nodes:
-        point_cost_paths[pointToString(getGridPointFromPoint(source))] = dijkstra(graph, getGridPointFromPoint(source))
+    def calcDist(point):
+        point_cost_paths[pathPlanningHelpers.pointToString(getGridPointFromPoint(point))] = Graph.dijkstra(graph, getGridPointFromPoint(point))
 
     def getDist(first_point, second_point):
         # Convert points to grid
         first_point = getGridPointFromPoint(first_point)
         second_point = getGridPointFromPoint(second_point)
         # Find first point in point_cost_paths
-        for key in point_cost_paths:
-            if key == pointToString(first_point):
-                return point_cost_paths[key][pointToString(second_point)][1]
+        if pathPlanningHelpers.pointToString(first_point) not in point_cost_paths:
+            point_cost_paths[pathPlanningHelpers.pointToString(first_point)] = Graph.dijkstra(graph, first_point)
+        return point_cost_paths[pathPlanningHelpers.pointToString(first_point)][pathPlanningHelpers.pointToString(second_point)][1]
+
+    def getDynamicDist(first_point, second_point, groups):
+        # Convert points to grid
+        first_point_grid = getGridPointFromPoint(first_point)
+        second_point_grid = getGridPointFromPoint(second_point)
+        first_point_str = pathPlanningHelpers.pointToString(first_point_grid)
+        second_point_str = pathPlanningHelpers.pointToString(second_point_grid)
+        # Check if we already calculated this path previously
+        if first_point_str in point_cost_paths:
+            if second_point_str in point_cost_paths[first_point_str]:
+                # We don't need to calculate new paths
+                return point_cost_paths[first_point_str][second_point_str]
+        else:
+            # We need to build new graph and calculate paths and update them in point_cost_path
+            dynamic_nodes = []
+            for group in groups:
+                dynamic_nodes += [GeoHelpers.getClosestPointFromPointToShape(Point(first_point[0], first_point[1]), group[0])]
+            graph, start_point_coords = Graph.createGraph(first_point, dynamic_nodes, obstacle_bboxes, board_limits)
+            graph = Graph.checkValidGrid(graph)
+            point_cost_paths[first_point_str] = Graph.dijkstra(graph, first_point_grid)
+            return point_cost_paths[first_point_str][second_point_str]
+
 
     def getRepPointFromGrid(grid_loc):
         grid_loc = [int(x) for x in grid_loc.split(',')]
@@ -253,14 +148,28 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
     def calcNewPathFromPathAndGrid():
         new_path = []
         curr_point = getGridPointFromPoint(start_point)
-        for point in ts_path + [start_point]:
-            for grid_point in point_cost_paths[pointToString(curr_point)][pointToString(getGridPointFromPoint(point))][0]:
+
+        total_length = 0
+
+        for point in ts_path:
+            path_dist = point_cost_paths[pathPlanningHelpers.pointToString(curr_point)][
+                pathPlanningHelpers.pointToString(getGridPointFromPoint(point))]
+            total_length += path_dist[1]
+            for grid_point in path_dist[0]:
                 new_path.append(getRepPointFromGrid(grid_point))
             curr_point = getGridPointFromPoint(point)
-        return new_path
+
+        # Calculate path from last point to start point
+        calcDist(ts_path[-1])
+        path_dist = point_cost_paths[pathPlanningHelpers.pointToString(curr_point)][pathPlanningHelpers.pointToString(getGridPointFromPoint(start_point))]
+        total_length += path_dist[1]
+        for grid_point in path_dist[0]:
+            new_path.append(getRepPointFromGrid(grid_point))
+        return new_path, total_length
 
     def heuristicObstacleTS():
-        return travelingSalesman(start_point, sensor_nodes, getDist, TravelingSalesmanTypes.Heuristic)
+        # return travelingSalesman(start_point, sensor_nodes, getDist, TravelingSalesmanTypes.Heuristic)
+        return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.Heuristic)
     def bruteForceObstacleTS():
         return travelingSalesman(start_point, sensor_nodes, getDist, TravelingSalesmanTypes.BruteForce)
 
@@ -271,3 +180,45 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
     if alg_type == TravelingSalesmanTypes.BruteForce:
         ts_path = list(bruteForceObstacleTS())
         return calcNewPathFromPathAndGrid()
+
+def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, alg_type=TravelingSalesmanTypes.Heuristic):
+
+    def bruteForceTravelingSalesman():
+        pass
+
+    def heuristicTravelingSalesman():
+        # Setup groups of intersecting sensors given a group of point radius list
+        groups = GeoHelpers.getShapeGroups(point_radius_list)
+        groups += GeoHelpers.getCirclesNotInIntersections(point_radius_list)
+
+        curr_point = start_point
+        new_point_list_radius = point_radius_list.copy()
+        while groups:
+            point_dist_list = [[GeoHelpers.getClosestPointFromPointToShape(Point(curr_point[0], curr_point[1]), group[0]),
+                                mapping_function(curr_point, GeoHelpers.getClosestPointFromPointToShape(Point(curr_point[0], curr_point[1]), group[0]), groups), group] for group in groups]
+            # Calculate distances from newly calculate points
+            closest_point = []
+            min_path = float("inf")
+            group_to_remove = []
+            for point_dist in point_dist_list:
+                curr_path_dist = point_dist[1][1]
+                if curr_path_dist < min_path:
+                    closest_point = point_dist[0]
+                    group_to_remove = point_dist[2]
+                    min_path = curr_path_dist
+
+            curr_point = list(closest_point)
+            yield curr_point
+            # Recalculate groups
+            for group_lm in group_to_remove[1]:
+                for point in new_point_list_radius:
+                    point_obj = Point(point[0], point[1])
+                    if point_obj.within(group_lm):
+                        new_point_list_radius.remove(point)
+            groups = GeoHelpers.getShapeGroups(new_point_list_radius)
+            groups += GeoHelpers.getCirclesNotInIntersections(new_point_list_radius)
+
+    if alg_type == TravelingSalesmanTypes.Heuristic:
+        return heuristicTravelingSalesman()
+    if alg_type == TravelingSalesmanTypes.BruteForce:
+        return bruteForceTravelingSalesman()

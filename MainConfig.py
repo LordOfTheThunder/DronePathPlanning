@@ -48,7 +48,8 @@ simulation_config = {
 
 path_planning_algorithm_config = {
     "Grid Size" : 100,
-    "Grid Coeff" : 0.2
+    "Grid Coeff" : 0.2,
+    "Relative Dist To Center" : 0.2
 }
 
 js_config = {
@@ -58,6 +59,10 @@ js_config = {
     "path_ordering_text_size" : 16,
     "grid_flag" : "true",
     "show_path_ordering" : "false"
+}
+
+geo_config = {
+    "Relative point coeff" : path_planning_algorithm_config["Relative Dist To Center"]
 }
 
 # Logger for the debug logs
