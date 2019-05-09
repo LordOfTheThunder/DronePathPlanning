@@ -227,7 +227,7 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
                 path_and_cost_to_next_point = mapping_function(curr_point,
                                  GeoHelpers.getClosestPointFromPointToShape(Point(curr_point[0], curr_point[1]),
                                                                             group[0]), groups)
-                curr_path += path_and_cost_to_next_point[0]
+                curr_path += path_and_cost_to_next_point[0][:-1]
                 stop_points.append(curr_path[-1])
                 curr_path_dist += path_and_cost_to_next_point[1]
                 curr_point = list(next_point)
