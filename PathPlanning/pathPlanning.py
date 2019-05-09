@@ -53,6 +53,7 @@ def travelingSalesman(start_point, point_list, mapping_function = euclideanDist,
                 min_cost = current_cost
                 min_path = path
 
+        min_path = [["stop", point] for point in min_path]
         return min_path
 
 
@@ -63,7 +64,7 @@ def travelingSalesman(start_point, point_list, mapping_function = euclideanDist,
             closest_point = min(point_dist_list, key=itemgetter(1))[0]
             point_list.remove(closest_point)
             curr_point = closest_point
-            yield closest_point
+            yield ["stop", closest_point]
 
     if alg_type == TravelingSalesmanTypes.Heuristic:
         return heuristicTravelingSalesman()

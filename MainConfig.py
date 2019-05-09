@@ -17,10 +17,12 @@ waypoint_config = {
     "Version" : "110",
     "Commands" : {
         "WAYPOINT" : 16,
+        "LOITER_TIME" : 19,
         "RETURN_TO_LAUNCH" : 20
     },
     "Default Path Plan" : path_plans_config["Follow Points"],
     "Default Coord Frame" : 3,
+    "Default Loiter Time" : 5,
 }
 
 global_config = {

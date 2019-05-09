@@ -52,9 +52,14 @@ def createWaypointFile(start_point, point_list):
 
     # Build other points according to path plan
     if waypoint_config["Default Path Plan"] == path_plans_config["Follow Points"]:
-        for point in point_list:
-            point_data = [0, waypoint_config["Default Coord Frame"], waypoint_config["Commands"]["WAYPOINT"],
-                          0, 0, 0, 0, point[0], point[1], waypoint_config["Default Alt"], 1]
+        for action, point in point_list:
+            action_cmd = waypoint_config["Commands"]["WAYPOINT"]
+            first_arg = 0
+            if action == "stop":
+                action_cmd = waypoint_config["Commands"]["LOITER_TIME"]
+                first_arg = waypoint_config["Default Loiter Time"]
+            point_data = [0, waypoint_config["Default Coord Frame"], action_cmd,
+                          first_arg, 0, 0, 0, point[0], point[1], waypoint_config["Default Alt"], 1]
             data = appendToWaypointRowMap(data, point_data)
         # Add last point - return to launch
         last_point = [0, waypoint_config["Default Coord Frame"],
