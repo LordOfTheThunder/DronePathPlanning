@@ -288,7 +288,17 @@ function drawPath() {
 	ctx.fillStyle = "#3be200"
 	ctx.fillText("Waiting", next_x, next_y - 20);
 
-	ctx.restore();  
+	ctx.restore();
+
+	// Draw Pause location
+	ctx.save();
+	
+	ctx.beginPath();
+	ctx.fillStyle = "#3B347A"
+	ctx.arc(next_x, next_y, draw_point_width, 0, Math.PI * 2, true);
+	ctx.fill();
+	
+	ctx.restore();
   }
 }
 
