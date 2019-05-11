@@ -244,13 +244,9 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
 
         findPathRecursively(groups)
         # Update path based on stop points
-        new_path = []
-        for point in path:
-            if point in stop_points:
-                new_path.append([waypoint_config["stop command"], point])
-            else:
-                new_path.append([waypoint_config["go command"], point])
-        new_path = [[action_point[0], grid_to_point_func(action_point[1])] for action_point in new_path]
+        new_path = [[waypoint_config["stop command"], grid_to_point_func(point)]
+                    if point in stop_points else [waypoint_config["go command"], grid_to_point_func(point)]
+                    for point in path]
         return new_path, path_dist
 
     def heuristicTravelingSalesman():

@@ -53,10 +53,8 @@ def getClosestPointFromPointToShape(point, shape):
 def getShapeGroups(point_radius_list):
     pols = list(getCircleObjectsFromList(point_radius_list))
     intersections = []  # List of tuples
-    for i in range(len(pols)):
-        for j in range(i + 1, len(pols)):
-            pol_1 = pols[i]
-            pol_2 = pols[j]
+    for pol_1 in pols:
+        for pol_2 in pols:
             if pol_1 is pol_2 or not pol_1.intersects(pol_2):
                 continue
             curr_int = pol_1.intersection(pol_2)
@@ -65,9 +63,13 @@ def getShapeGroups(point_radius_list):
             for s in range(len(intersections)):
                 if curr_int.intersects(intersections[s][0]):
                     intersections[s] = [curr_int.intersection(intersections[s][0]), intersections[s][1] + [pol_2]]
+                    pols.remove(pol_1)
+                    pols.remove(pol_2)
                     exists = True
             if not exists:
                 intersections.append([curr_int, [pol_1, pol_2]])
+                if pol_2 in pols:
+                    pols.remove(pol_2)
 
     return intersections
 
