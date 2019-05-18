@@ -34,6 +34,7 @@ global_config = {
     "Sensor Point CSV" : "sensor_positions.csv",
     "Obstacles Bbox CSV" : "obstacle_bboxes.csv",
     "Path Name" : "path1",
+    "Current Flow" : "Waypoint"     # Can be "Waypoint" or "Simulation"
 }
 
 simulation_config = {
@@ -58,7 +59,7 @@ path_planning_algorithm_config = {
 }
 
 js_config = {
-    "animation_time" : 5,
+    "animation_time" : 2,
     "draw_point_width" : 4,
     "text_size" : 12,
     "path_ordering_text_size" : 16,

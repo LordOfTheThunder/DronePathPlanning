@@ -3,13 +3,15 @@ from enum import Enum
 from Geo import GeoHelpers
 from MainConfig import path_planning_algorithm_config, waypoint_config
 from PathPlanning import Graph, pathPlanningHelpers
-from shapely.geometry import Point
+from shapely.geometry import Point, LineString, Polygon
 
 class TravelingSalesmanTypes(Enum):
     Heuristic = 1
     BruteForce = 2
     HeuristicDynamic = 3
     BruteForceDynamic = 4
+    HeuristicOptimizedDynamic = 5
+    BruteForceOptimizedDynamic = 6
 
 # Regular path planning for points
 
@@ -142,6 +144,43 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
             return point_cost_paths[first_point_str][second_point_str]
 
 
+    # Calculate obstacle polygons for intersection
+    def bboxToPolygon(bbox):
+        bl = [bbox[0], bbox[1]]
+        ur = [bbox[2], bbox[3]]
+        br = [bbox[2], bbox[1]]
+        ul = [bbox[0], bbox[3]]
+        return [bl, br, ur, ul]
+
+    obstacle_polygons = [Polygon(bboxToPolygon(bbox)) for bbox in obstacle_bboxes]
+
+    def getOptimizedDynamicDist(first_point, second_point, groups):
+        # Try to first see if straight line path is possible
+        line = LineString([(first_point[0], first_point[1]), (second_point[0], second_point[1])])
+        first_point_grid = getGridPointFromPoint(first_point)
+        second_point_grid = getGridPointFromPoint(second_point)
+        first_point_str = pathPlanningHelpers.pointToString(first_point_grid)
+        second_point_str = pathPlanningHelpers.pointToString(second_point_grid)
+
+        intersects = False
+        for polygon in obstacle_polygons:
+            if polygon.intersects(line):
+                intersects = True
+
+        if not intersects:
+            # We can go from point to point in a straight line
+            path_res = [[first_point_str, second_point_str], euclideanDist(first_point, second_point)]
+            target_paths = {
+                second_point_str: path_res
+            }
+            if first_point_str not in point_cost_paths:
+                point_cost_paths[first_point_str] = target_paths
+            else:
+                point_cost_paths[first_point_str][second_point_str] = path_res
+            return point_cost_paths[first_point_str][second_point_str]
+
+        return getDynamicDist(first_point, second_point, groups)
+
     def getRepPointFromGrid(grid_loc):
         grid_loc = [int(x) for x in grid_loc.split(',')]
         rep_x = lx + grid_loc[0] * x_step + x_step / 2
@@ -181,6 +220,10 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
         return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.HeuristicDynamic)
     def bruteForceDynamicObstacleTS():
         return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.BruteForceDynamic, getRepPointFromGrid, calcDist)
+    def heuristicDynamicOptimizedObstacleTS():
+        return dynamicTravelingSalesman(start_point, point_radius_list, getOptimizedDynamicDist, TravelingSalesmanTypes.HeuristicDynamic)
+    def bruteForceDynamicOptimizedObstacleTS():
+        return dynamicTravelingSalesman(start_point, point_radius_list, getOptimizedDynamicDist, TravelingSalesmanTypes.BruteForceDynamic, getRepPointFromGrid, calcDist)
 
     if alg_type == TravelingSalesmanTypes.Heuristic:
         ts_path = list(heuristicObstacleTS())
@@ -197,6 +240,13 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
     if alg_type == TravelingSalesmanTypes.BruteForceDynamic:
         # For this one path is already calculated
         return bruteForceDynamicObstacleTS()
+
+    if alg_type == TravelingSalesmanTypes.HeuristicOptimizedDynamic:
+        ts_path = list(heuristicDynamicOptimizedObstacleTS())
+        return calcNewPathFromPathAndGrid()
+
+    if alg_type == TravelingSalesmanTypes.BruteForceOptimizedDynamic:
+        return bruteForceDynamicOptimizedObstacleTS()
 
 def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, alg_type=TravelingSalesmanTypes.HeuristicDynamic, grid_to_point_func=None, calcDist=None):
 
@@ -227,7 +277,7 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
                 path_and_cost_to_next_point = mapping_function(curr_point,
                                  GeoHelpers.getClosestPointFromPointToShape(Point(curr_point[0], curr_point[1]),
                                                                             group[0]), groups)
-                curr_path += path_and_cost_to_next_point[0][:-1]
+                curr_path += path_and_cost_to_next_point[0]
                 stop_points.append(curr_path[-1])
                 curr_path_dist += path_and_cost_to_next_point[1]
                 curr_point = list(next_point)
