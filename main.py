@@ -1,9 +1,27 @@
-from Waypoint import file
+from Waypoint import file, loadData
 from PathPlanning import pathPlanning
 import SimulationGenerator
 import FlowHelper
 from MainConfig import logger, global_config
 from PathPlanning.pathPlanning import TravelingSalesmanTypes
+
+def pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes):
+    # Calculate path with traveling salesman
+    # Regular traveling salesman
+    # path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
+    # Adapted traveling salesman
+    # path = list(pathPlanning.advancedTravelingSalesman(start_point, sensor_coords_with_radius))
+    # Obstacle traveling salesman
+    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes)
+    # Obstacle traveling salesman with dynamic algorithm
+    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.HeuristicDynamic)
+    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.BruteForceDynamic)
+    # Dynamic optimized traveling salesman : take straight line if no obstacles. Otherwise calculate route using grid and dijkstra
+    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.HeuristicOptimizedDynamic)
+    path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes,
+                                                        TravelingSalesmanTypes.BruteForceOptimizedDynamic)
+    logger.info("Total dist is: " + str(dist))
+    return path, dist
 
 def SimulationFlow():
     # Parse sensor points
@@ -27,19 +45,7 @@ def SimulationFlow():
     # Generate grid file
     SimulationGenerator.generateGridFile(start_point, sensor_coords_with_radius)
     # Calculate path with traveling salesman
-    # Regular traveling salesman
-    # path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
-    # Adapted traveling salesman
-    # path = list(pathPlanning.advancedTravelingSalesman(start_point, sensor_coords_with_radius))
-    # Obstacle traveling salesman
-    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes)
-    # Obstacle traveling salesman with dynamic algorithm
-    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.HeuristicDynamic)
-    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.BruteForceDynamic)
-    # Dynamic optimized traveling salesman : take straight line if no obstacles. Otherwise calculate route using grid and dijkstra
-    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.HeuristicOptimizedDynamic)
-    path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.BruteForceOptimizedDynamic)
-    logger.info("Total dist is: " + str(dist))
+    path, dist = pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes)
     # Generate Path File
     SimulationGenerator.generatePathFile(path)
 
@@ -50,20 +56,10 @@ def WaypointFlow():
     start_point = FlowHelper.getStartPointFromCsv()
     # Parse Obstacle bboxes
     obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
-
+    # Parse config file
+    loadData.readWaypointConfig()
     # Calculate path with traveling salesman
-    # Regular traveling salesman
-    # path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
-    # Adapted traveling salesman
-    # path = list(pathPlanning.advancedTravelingSalesman(start_point, sensor_coords_with_radius))
-    # Obstacle traveling salesman
-    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes)
-    # Obstacle traveling salesman with dynamic algorithm
-    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.HeuristicDynamic)
-    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.BruteForceDynamic)
-    # Dynamic optimized traveling salesman : take straight line if no obstacles. Otherwise calculate route using grid and dijkstra
-    # path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.HeuristicOptimizedDynamic)
-    path, dist = pathPlanning.obstacleTravelingSalesman(start_point, sensor_coords_with_radius, obstacle_bboxes, TravelingSalesmanTypes.BruteForceOptimizedDynamic)
+    path, dist = pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes)
     # Create waypoint file
     file.createWaypointFile(start_point, path)
 

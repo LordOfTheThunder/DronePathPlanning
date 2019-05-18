@@ -169,7 +169,7 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
 
         if not intersects:
             # We can go from point to point in a straight line
-            path_res = [[first_point_str, second_point_str], euclideanDist(first_point, second_point)]
+            path_res = [[second_point_str], euclideanDist(first_point, second_point)]
             target_paths = {
                 second_point_str: path_res
             }
@@ -212,6 +212,12 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
             new_path.append([waypoint_config["go command"], getRepPointFromGrid(grid_point)])
         return new_path, total_length
 
+    extra_funcs = {
+        "Point to grid": getGridPointFromPoint,
+        "Grid to point": getRepPointFromGrid,
+        "Calc Dist": calcDist,
+    }
+
     def heuristicObstacleTS():
         return travelingSalesman(start_point, sensor_nodes, getDist, TravelingSalesmanTypes.Heuristic)
     def bruteForceObstacleTS():
@@ -219,11 +225,11 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
     def heuristicDynamicObstacleTS():
         return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.HeuristicDynamic)
     def bruteForceDynamicObstacleTS():
-        return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.BruteForceDynamic, getRepPointFromGrid, calcDist)
+        return dynamicTravelingSalesman(start_point, point_radius_list, getDynamicDist, TravelingSalesmanTypes.BruteForceDynamic, extra_funcs)
     def heuristicDynamicOptimizedObstacleTS():
         return dynamicTravelingSalesman(start_point, point_radius_list, getOptimizedDynamicDist, TravelingSalesmanTypes.HeuristicDynamic)
     def bruteForceDynamicOptimizedObstacleTS():
-        return dynamicTravelingSalesman(start_point, point_radius_list, getOptimizedDynamicDist, TravelingSalesmanTypes.BruteForceDynamic, getRepPointFromGrid, calcDist)
+        return dynamicTravelingSalesman(start_point, point_radius_list, getOptimizedDynamicDist, TravelingSalesmanTypes.BruteForceDynamic, extra_funcs)
 
     if alg_type == TravelingSalesmanTypes.Heuristic:
         ts_path = list(heuristicObstacleTS())
@@ -248,7 +254,7 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
     if alg_type == TravelingSalesmanTypes.BruteForceOptimizedDynamic:
         return bruteForceDynamicOptimizedObstacleTS()
 
-def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, alg_type=TravelingSalesmanTypes.HeuristicDynamic, grid_to_point_func=None, calcDist=None):
+def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, alg_type=TravelingSalesmanTypes.HeuristicDynamic, extra_funcs_hash=None):
 
     def bruteForceTravelingSalesman():
         # Setup groups of intersecting sensors given a group of point radius list
@@ -262,12 +268,12 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
         def findPathRecursively(groups, curr_path=None, curr_path_dist=0, new_point_radius_list=point_radius_list, curr_point=start_point):
             nonlocal path_dist, path, stop_points
             if not curr_path:
-                curr_path = []
+                curr_path = [pathPlanningHelpers.pointToString(extra_funcs_hash["Point to grid"](start_point))]
             if not groups:
                 # Calculate path from last point to start point
-                path_to_start, cost_to_start = calcDist(curr_point)[curr_path[0]]
+                path_to_start, cost_to_start = extra_funcs_hash["Calc Dist"](curr_point)[curr_path[0]]
                 curr_path_dist += cost_to_start
-                curr_path += path_to_start
+                curr_path += path_to_start[1:]
                 if curr_path_dist < path_dist:
                     path_dist = curr_path_dist
                     path = curr_path
@@ -294,8 +300,8 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
 
         findPathRecursively(groups)
         # Update path based on stop points
-        new_path = [[waypoint_config["stop command"], grid_to_point_func(point)]
-                    if point in stop_points else [waypoint_config["go command"], grid_to_point_func(point)]
+        new_path = [[waypoint_config["stop command"], extra_funcs_hash["Grid to point"](point)]
+                    if point in stop_points else [waypoint_config["go command"], extra_funcs_hash["Grid to point"](point)]
                     for point in path]
         return new_path, path_dist
 
