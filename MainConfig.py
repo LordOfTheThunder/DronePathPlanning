@@ -88,11 +88,11 @@ formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 logger.setLevel(logging.DEBUG)
 
 fh = logging.FileHandler('path_planning_log.txt')
-fh.setLevel(logging.DEBUG)
+fh.setLevel(logging.INFO)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+ch.setLevel(logging.INFO)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
