@@ -1,1 +1,1 @@
-var start_point = [31.323287,34.29966,0]
+var start_point = [0,0,0]

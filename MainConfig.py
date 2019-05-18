@@ -1,4 +1,5 @@
 import logging
+from enum import Enum
 
 """
 Different plans we might decide for our drone
@@ -7,6 +8,14 @@ Follow Points : follow points in order and then return to base
 path_plans_config = {
     "Follow Points" : 0
 }
+class Flows(Enum):
+    Waypoint = 1
+    Simulation = 2
+    Both = 3
+
+class PointFormats():
+    LongLat = 1
+    Meters = 2
 
 waypoint_config = {
     "Default Alt" : 100,
@@ -35,7 +44,8 @@ global_config = {
     "Sensor Point CSV" : "sensor_positions.csv",
     "Obstacles Bbox CSV" : "obstacle_bboxes.csv",
     "Path Name" : "path1",
-    "Current Flow" : "Simulation"     # Can be "Waypoint" or "Simulation"
+    "Current Flow" : Flows.Both,
+    "Point Format" : PointFormats.Meters
 }
 
 simulation_config = {

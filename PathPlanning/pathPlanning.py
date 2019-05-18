@@ -4,6 +4,7 @@ from Geo import GeoHelpers
 from MainConfig import path_planning_algorithm_config, waypoint_config
 from PathPlanning import Graph, pathPlanningHelpers
 from shapely.geometry import Point, LineString, Polygon
+from PathPlanning.pathPlanningHelpers import euclideanDist
 
 class TravelingSalesmanTypes(Enum):
     Heuristic = 1
@@ -14,9 +15,6 @@ class TravelingSalesmanTypes(Enum):
     BruteForceOptimizedDynamic = 6
 
 # Regular path planning for points
-
-def euclideanDist(first_point, second_point):
-    return ((first_point[0] - second_point[0])**2 + (first_point[1] - second_point[1])**2)**0.5
 
 def travelingSalesman(start_point, point_list, mapping_function = euclideanDist, alg_type=TravelingSalesmanTypes.Heuristic):
 
@@ -110,9 +108,17 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
         grid_y = int((point[0] - ly) / (uy - ly) * grid_size)
         return [grid_x, grid_y]
 
-    def calcDist(point):
-        point_cost_paths[pathPlanningHelpers.pointToString(getGridPointFromPoint(point))] = Graph.dijkstra(graph, getGridPointFromPoint(point))
-        return point_cost_paths[pathPlanningHelpers.pointToString(getGridPointFromPoint(point))]
+    def calcDist(first_point, second_point):
+        # Check if we can go in straight line first
+        line = LineString([(first_point[0], first_point[1]), (second_point[0], second_point[1])])
+        first_point_grid, second_point_grid, first_point_str, second_point_str = getGridAndStringFromPoint(first_point, second_point)
+
+        if not checkIntersectionWithObstacles(line):
+            calcStraightLinePathBetweenPoints(first_point, second_point)
+            return point_cost_paths[first_point_str]
+
+        point_cost_paths[pathPlanningHelpers.pointToString(getGridPointFromPoint(first_point))] = Graph.dijkstra(graph, getGridPointFromPoint(first_point))
+        return point_cost_paths[pathPlanningHelpers.pointToString(getGridPointFromPoint(first_point))]
 
     def getDist(first_point, second_point):
         # Convert points to grid
@@ -154,29 +160,38 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
 
     obstacle_polygons = [Polygon(bboxToPolygon(bbox)) for bbox in obstacle_bboxes]
 
-    def getOptimizedDynamicDist(first_point, second_point, groups):
-        # Try to first see if straight line path is possible
-        line = LineString([(first_point[0], first_point[1]), (second_point[0], second_point[1])])
+    def checkIntersectionWithObstacles(line):
+        for polygon in obstacle_polygons:
+            if polygon.intersects(line):
+                return True
+        return False
+
+    def calcStraightLinePathBetweenPoints(first_point, second_point):
+        first_point_grid, second_point_grid, first_point_str, second_point_str = getGridAndStringFromPoint(first_point, second_point)
+        # We can go from point to point in a straight line
+        path_res = [[second_point_str], euclideanDist(first_point, second_point)]
+        target_paths = {
+            second_point_str: path_res
+        }
+        if first_point_str not in point_cost_paths:
+            point_cost_paths[first_point_str] = target_paths
+        else:
+            point_cost_paths[first_point_str][second_point_str] = path_res
+
+    def getGridAndStringFromPoint(first_point, second_point):
         first_point_grid = getGridPointFromPoint(first_point)
         second_point_grid = getGridPointFromPoint(second_point)
         first_point_str = pathPlanningHelpers.pointToString(first_point_grid)
         second_point_str = pathPlanningHelpers.pointToString(second_point_grid)
+        return first_point_grid, second_point_grid, first_point_str, second_point_str
 
-        intersects = False
-        for polygon in obstacle_polygons:
-            if polygon.intersects(line):
-                intersects = True
+    def getOptimizedDynamicDist(first_point, second_point, groups):
+        # Try to first see if straight line path is possible
+        line = LineString([(first_point[0], first_point[1]), (second_point[0], second_point[1])])
+        first_point_grid, second_point_grid, first_point_str, second_point_str = getGridAndStringFromPoint(first_point, second_point)
 
-        if not intersects:
-            # We can go from point to point in a straight line
-            path_res = [[second_point_str], euclideanDist(first_point, second_point)]
-            target_paths = {
-                second_point_str: path_res
-            }
-            if first_point_str not in point_cost_paths:
-                point_cost_paths[first_point_str] = target_paths
-            else:
-                point_cost_paths[first_point_str][second_point_str] = path_res
+        if not checkIntersectionWithObstacles(line):
+            calcStraightLinePathBetweenPoints(first_point, second_point)
             return point_cost_paths[first_point_str][second_point_str]
 
         return getDynamicDist(first_point, second_point, groups)
@@ -205,7 +220,8 @@ def obstacleTravelingSalesman(start_point, point_radius_list, obstacle_bboxes, a
 
         # Calculate path from last point to start point
         last_action, last_coord = ts_path[-1]
-        calcDist(last_coord)
+        prev_last_action, prev_last_coord = ts_path[-2]
+        calcDist(prev_last_coord, last_coord)
         path_dist = point_cost_paths[pathPlanningHelpers.pointToString(curr_point)][pathPlanningHelpers.pointToString(getGridPointFromPoint(start_point))]
         total_length += path_dist[1]
         for grid_point in path_dist[0]:
@@ -271,7 +287,7 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
                 curr_path = [pathPlanningHelpers.pointToString(extra_funcs_hash["Point to grid"](start_point))]
             if not groups:
                 # Calculate path from last point to start point
-                path_to_start, cost_to_start = extra_funcs_hash["Calc Dist"](curr_point)[curr_path[0]]
+                path_to_start, cost_to_start = extra_funcs_hash["Calc Dist"](curr_point, start_point)[curr_path[0]]
                 curr_path_dist += cost_to_start
                 curr_path += path_to_start[1:]
                 if curr_path_dist < path_dist:

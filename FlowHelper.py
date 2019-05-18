@@ -1,4 +1,4 @@
-from MainConfig import global_config
+from MainConfig import global_config, PointFormats
 def getSensorPointsFromCsv():
     file = global_config["Relative Path"] + global_config["Sensor Point CSV"]
     sensor_coords = []
@@ -17,7 +17,9 @@ def getStartPointFromCsv():
     with open(file, 'r') as fh:
         point = [float(x) for x in fh.readline().split(',')]
     fh.close()
-    return point
+    if global_config["Point Format"] == PointFormats.Meters:
+        return [0, 0], point
+    return point, point
 
 def getObstacleBboxesFromCsv():
     file = global_config["Relative Path"] + global_config["Obstacles Bbox CSV"]

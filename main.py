@@ -2,10 +2,16 @@ from Waypoint import file, loadData
 from PathPlanning import pathPlanning
 import SimulationGenerator
 import FlowHelper
-from MainConfig import logger, global_config
+from MainConfig import logger, global_config, Flows, PointFormats
 from PathPlanning.pathPlanning import TravelingSalesmanTypes
 
+from PathPlanning.pathPlanningHelpers import metersToLongLat
+
 def pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes):
+    # If we work in meters, our points are all relative to 0,0 so start_point should be updated
+    if global_config["Point Format"] == PointFormats.Meters:
+        start_point = [0, 0]
+
     # Calculate path with traveling salesman
     # Regular traveling salesman
     # path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
@@ -27,7 +33,7 @@ def SimulationFlow():
     # Parse sensor points
     sensor_coords, sensor_coords_with_radius = FlowHelper.getSensorPointsFromCsv()
     # Parse start point
-    start_point = FlowHelper.getStartPointFromCsv()
+    start_point, start_point_map_coords = FlowHelper.getStartPointFromCsv()
     # Parse Obstacle bboxes
     obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
     # Generate HTML file using config
@@ -53,7 +59,7 @@ def WaypointFlow():
     # Parse sensor points
     sensor_coords, sensor_coords_with_radius = FlowHelper.getSensorPointsFromCsv()
     # Parse start point
-    start_point = FlowHelper.getStartPointFromCsv()
+    start_point, start_point_map_coords = FlowHelper.getStartPointFromCsv()
     # Parse Obstacle bboxes
     obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
     # Parse config file
@@ -61,11 +67,43 @@ def WaypointFlow():
     # Calculate path with traveling salesman
     path, dist = pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes)
     # Create waypoint file
-    file.createWaypointFile(start_point, path)
+    file.createWaypointFile(start_point_map_coords, path)
+
+def CombinedFlows():
+    # Parse sensor points
+    sensor_coords, sensor_coords_with_radius = FlowHelper.getSensorPointsFromCsv()
+    # Parse start point
+    start_point, start_point_map_coords = FlowHelper.getStartPointFromCsv()
+    # Parse Obstacle bboxes
+    obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
+    # Parse config file
+    loadData.readWaypointConfig()
+    # Generate HTML file using config
+    SimulationGenerator.generateHTMLFile()
+    # Generate Config JS file
+    SimulationGenerator.generateConfigFile()
+    # Generate files with start point, sensor points and path
+    SimulationGenerator.generateStartPointFile(start_point)
+    # Generate sensor points file
+    SimulationGenerator.generateSensorPointsFile(sensor_coords_with_radius)
+    # Generate sensor radii intersection file
+    SimulationGenerator.generateIntersectionFile(sensor_coords_with_radius)
+    # Generate Obstacle file
+    SimulationGenerator.generateObstacleFile(obstacle_bboxes)
+    # Generate grid file
+    SimulationGenerator.generateGridFile(start_point, sensor_coords_with_radius)
+    # Calculate path with traveling salesman
+    path, dist = pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes)
+    # Create waypoint file
+    file.createWaypointFile(start_point_map_coords, path)
+    # Generate Path File
+    SimulationGenerator.generatePathFile(path)
 
 if __name__ == "__main__":
     # Different flows we can execute
-    if global_config["Current Flow"] == "Waypoint":
+    if global_config["Current Flow"] == Flows.Waypoint:
         WaypointFlow()
-    if global_config["Current Flow"] == "Simulation":
+    if global_config["Current Flow"] == Flows.Simulation:
         SimulationFlow()
+    if global_config["Current Flow"] == Flows.Both:
+        CombinedFlows()

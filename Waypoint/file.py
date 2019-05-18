@@ -1,12 +1,20 @@
 from MainConfig import waypoint_config, logger, path_plans_config
 import pandas as pd
 import csv
+from MainConfig import global_config, PointFormats
+from PathPlanning.pathPlanningHelpers import metersToLongLat
 
 def createWaypointFile(start_point, point_list):
     column_names = waypoint_config["Columns"]
     columns = column_names.split(' ')
     first_row = waypoint_config["First Row"].split(' ')
     first_row.append(waypoint_config["Version"])
+
+    if global_config["Point Format"] == PointFormats.Meters:
+        # If we are in meter format we need to transform all points for the mission planner
+        # Compared to start point which we receive already in long/lat
+        # We reverse the point because we get it as x,y and want result as y,x because of long/lat
+        point_list = [[point[0], metersToLongLat(start_point, point[1][::-1])] for point in point_list]
 
     file = waypoint_config["Relative Path"] + waypoint_config["File Name"]
     with open(file, 'w') as fh:
