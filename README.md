@@ -8,10 +8,10 @@ In order to get the project running you will need a working python 3.6 environme
 - [Python 3.6](https://www.python.org/downloads/release/python-365/)
 - [Pycharm](https://www.jetbrains.com/pycharm/download/#section=windows)
 - [Shapely for windows](https://deparkes.co.uk/2015/01/29/install-shapely-on-anaconda/) (Shapely can be installed without Anaconda as well by using 'wheel')
-- [Google Chrome](https://www.google.com/chrome/)
 For installing shapely using command line do the following:
   - Download shapely.whl from [here](https://www.lfd.uci.edu/~gohlke/pythonlibs/#shapely) (use cp36 for python 3.6)
   - Run the following command in terminal: `<your pythong path> -m pip install <shapely.whl path>`
+- [Google Chrome](https://www.google.com/chrome/)
   
 ### Running the project
 To run the project: 
