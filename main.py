@@ -5,8 +5,6 @@ import FlowHelper
 from MainConfig import logger, global_config, Flows, PointFormats
 from PathPlanning.pathPlanning import TravelingSalesmanTypes
 
-from PathPlanning.pathPlanningHelpers import metersToLongLat
-
 def pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes):
     # If we work in meters, our points are all relative to 0,0 so start_point should be updated
     if global_config["Point Format"] == PointFormats.Meters:
@@ -30,6 +28,8 @@ def pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes):
     return path, dist
 
 def SimulationFlow():
+    # Parse config file
+    loadData.readWaypointConfig()
     # Parse sensor points
     sensor_coords, sensor_coords_with_radius = FlowHelper.getSensorPointsFromCsv()
     # Parse start point
@@ -56,28 +56,28 @@ def SimulationFlow():
     SimulationGenerator.generatePathFile(path)
 
 def WaypointFlow():
+    # Parse config file
+    loadData.readWaypointConfig()
     # Parse sensor points
     sensor_coords, sensor_coords_with_radius = FlowHelper.getSensorPointsFromCsv()
     # Parse start point
     start_point, start_point_map_coords = FlowHelper.getStartPointFromCsv()
     # Parse Obstacle bboxes
     obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
-    # Parse config file
-    loadData.readWaypointConfig()
     # Calculate path with traveling salesman
     path, dist = pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes)
     # Create waypoint file
     file.createWaypointFile(start_point_map_coords, path)
 
 def CombinedFlows():
+    # Parse config file
+    loadData.readWaypointConfig()
     # Parse sensor points
     sensor_coords, sensor_coords_with_radius = FlowHelper.getSensorPointsFromCsv()
     # Parse start point
     start_point, start_point_map_coords = FlowHelper.getStartPointFromCsv()
     # Parse Obstacle bboxes
     obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
-    # Parse config file
-    loadData.readWaypointConfig()
     # Generate HTML file using config
     SimulationGenerator.generateHTMLFile()
     # Generate Config JS file

@@ -35,7 +35,6 @@ waypoint_config = {
     "Default Loiter Time" : 5,
     "stop command" : "stop",
     "go command" : "go",
-    "Config File" : "./input/waypoint.config",
 }
 
 global_config = {
@@ -44,8 +43,9 @@ global_config = {
     "Sensor Point CSV" : "sensor_positions.csv",
     "Obstacles Bbox CSV" : "obstacle_bboxes.csv",
     "Path Name" : "path1",
+    "Config File": "./input/waypoint.config",
     "Current Flow" : Flows.Both,
-    "Point Format" : PointFormats.Meters
+    "Point Format" : PointFormats.Meters,
 }
 
 simulation_config = {
