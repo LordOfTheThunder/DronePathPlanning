@@ -3,9 +3,16 @@ def getSensorPointsFromCsv():
     file = global_config["Relative Path"] + global_config["Sensor Point CSV"]
     sensor_coords = []
     sensor_coords_with_radius = []
+
     with open(file, 'r') as fh:
         for coord in fh:
             coord_list = [float(x) for x in coord.split(',')]
+            if global_config["Point Format"] == PointFormats.LongLat:
+                # Need to convert meter radius format to long lat
+                # Dirty estimate : 111,111m is one degree in latitude
+                # The clean estimate will be to work with ellipsis instead of circles
+                # By calculating vertical radius and horizontal radius based on https://gis.stackexchange.com/questions/2951/algorithm-for-offsetting-a-latitude-longitude-by-some-amount-of-meters
+                coord_list[-1] /= 111111
             sensor_coords_with_radius.append(coord_list)
             sensor_coords.append(coord_list[:len(coord_list) - 1])
     fh.close()
