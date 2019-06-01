@@ -285,15 +285,6 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
             nonlocal path_dist, path, stop_points
             if not curr_path:
                 curr_path = [pathPlanningHelpers.pointToString(extra_funcs_hash["Point to grid"](start_point))]
-            if not groups:
-                # Calculate path from last point to start point
-                path_to_start, cost_to_start = extra_funcs_hash["Calc Dist"](curr_point, start_point)[curr_path[0]]
-                curr_path_dist += cost_to_start
-                curr_path += path_to_start[1:]
-                if curr_path_dist < path_dist:
-                    path_dist = curr_path_dist
-                    path = curr_path
-                return
             for group in groups:
                 next_point = GeoHelpers.getClosestPointFromPointToShape(Point(curr_point[0], curr_point[1]), group[0])
                 path_and_cost_to_next_point = mapping_function(curr_point,
@@ -312,7 +303,19 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
                             new_point_radius_list.remove(point)
                 groups_alt = GeoHelpers.getShapeGroups(new_point_radius_list)
                 groups_alt += GeoHelpers.getCirclesNotInIntersections(new_point_radius_list)
-                findPathRecursively(groups_alt, curr_path.copy(), curr_path_dist, new_point_radius_list.copy(), curr_point)
+
+                if not groups_alt:
+                    # Calculate path from last point to start point
+                    # print(curr_point)
+                    path_to_start, cost_to_start = extra_funcs_hash["Calc Dist"](curr_point, start_point)[curr_path[0]]
+                    curr_path += path_to_start[1:]
+                    # print(curr_path)
+                    if curr_path_dist < path_dist:
+                        path_dist = curr_path_dist
+                        path = curr_path
+                    continue
+
+                findPathRecursively(groups_alt.copy(), curr_path.copy(), curr_path_dist, new_point_radius_list.copy(), curr_point)
 
         findPathRecursively(groups)
         # Update path based on stop points

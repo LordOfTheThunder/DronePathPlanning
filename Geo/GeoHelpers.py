@@ -68,8 +68,6 @@ def getShapeGroups(point_radius_list):
                     exists = True
             if not exists:
                 intersections.append([curr_int, [pol_1, pol_2]])
-                if pol_2 in pols:
-                    pols.remove(pol_2)
 
     return intersections
 
