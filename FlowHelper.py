@@ -6,7 +6,8 @@ def getSensorPointsFromCsv():
 
     with open(file, 'r') as fh:
         for coord in fh:
-            coord_list = [float(x) for x in coord.split(',')]
+            # Last 2 columns are UI and SNR which we ignore in the algorithm
+            coord_list = [float(x) for x in coord.split(',')][:-2]
             if global_config["Point Format"] == PointFormats.LongLat:
                 # Need to convert meter radius format to long lat
                 # Dirty estimate : 111,111m is one degree in latitude
