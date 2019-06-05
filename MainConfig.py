@@ -18,7 +18,7 @@ class PointFormats():
     Meters = 2
 
 waypoint_config = {
-    "Default Alt" : 100,
+    "Default Alt" : 10,
     "Columns" : "<INDEX> <CURRENT WP> <COORD FRAME> <COMMAND> <PARAM1> <PARAM2> <PARAM3> <PARAM4> <PARAM5/X/LONGITUDE> <PARAM6/Y/LATITUDE> <PARAM7/Z/ALTITUDE> <AUTOCONTINUE>",
     "Relative Path" : "./output/",
     "File Name" : "path_planning.waypoints",

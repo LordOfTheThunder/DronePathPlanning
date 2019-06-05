@@ -5,11 +5,12 @@ import FlowHelper
 from MainConfig import logger, global_config, Flows, PointFormats
 from PathPlanning.pathPlanning import TravelingSalesmanTypes
 
-def pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes):
+def pathPlanningCall(start_point, sensor_coords_with_radius, sensor_coords, obstacle_bboxes):
     # If we work in meters, our points are all relative to 0,0 so start_point should be updated
     if global_config["Point Format"] == PointFormats.Meters:
         start_point = [0, 0]
 
+    dist = 0
     # Calculate path with traveling salesman
     # Regular traveling salesman
     # path = list(pathPlanning.travelingSalesman(start_point, sensor_coords))
@@ -51,7 +52,7 @@ def SimulationFlow():
     # Generate grid file
     SimulationGenerator.generateGridFile(start_point, sensor_coords_with_radius)
     # Calculate path with traveling salesman
-    path, dist = pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes)
+    path, dist = pathPlanningCall(start_point, sensor_coords_with_radius, sensor_coords, obstacle_bboxes)
     # Generate Path File
     SimulationGenerator.generatePathFile(path)
 
@@ -65,7 +66,7 @@ def WaypointFlow():
     # Parse Obstacle bboxes
     obstacle_bboxes = FlowHelper.getObstacleBboxesFromCsv()
     # Calculate path with traveling salesman
-    path, dist = pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes)
+    path, dist = pathPlanningCall(start_point, sensor_coords_with_radius, sensor_coords, obstacle_bboxes)
     # Create waypoint file
     file.createWaypointFile(start_point_map_coords, path)
 
@@ -93,7 +94,7 @@ def CombinedFlows():
     # Generate grid file
     SimulationGenerator.generateGridFile(start_point, sensor_coords_with_radius)
     # Calculate path with traveling salesman
-    path, dist = pathPlanningCall(start_point, sensor_coords_with_radius, obstacle_bboxes)
+    path, dist = pathPlanningCall(start_point, sensor_coords_with_radius, sensor_coords, obstacle_bboxes)
     # Create waypoint file
     file.createWaypointFile(start_point_map_coords, path)
     # Generate Path File
