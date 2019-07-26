@@ -281,19 +281,32 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
         path_dist = float("inf")
         stop_points = []
 
-        def findPathRecursively(groups, curr_path=None, curr_path_dist=0, new_point_radius_list=point_radius_list, curr_point=start_point):
+        def findPathRecursively(groups, curr_path=None, curr_path_dist=0, new_point_radius_list=point_radius_list, curr_point=start_point, curr_stop_points=[]):
             nonlocal path_dist, path, stop_points
             if not curr_path:
                 curr_path = [pathPlanningHelpers.pointToString(extra_funcs_hash["Point to grid"](start_point))]
+            tmp_curr_path = curr_path.copy()
+            tmp_curr_path_dist = curr_path_dist
+            tmp_new_point_radius_list = new_point_radius_list.copy()
+            tmp_curr_stop_points = curr_stop_points.copy()
             for group in groups:
                 next_point = GeoHelpers.getClosestPointFromPointToShape(Point(curr_point[0], curr_point[1]), group[0])
                 path_and_cost_to_next_point = mapping_function(curr_point,
                                  GeoHelpers.getClosestPointFromPointToShape(Point(curr_point[0], curr_point[1]),
                                                                             group[0]), groups)
-                curr_path += path_and_cost_to_next_point[0]
-                stop_points.append(curr_path[-1])
+                if len(path_and_cost_to_next_point[0]) > 1:
+                    curr_path += path_and_cost_to_next_point[0][1:]
+                else:
+                    curr_path += path_and_cost_to_next_point[0]
+                curr_stop_points.append(path_and_cost_to_next_point[0][-1])
                 curr_path_dist += path_and_cost_to_next_point[1]
-                curr_point = list(next_point)
+
+                if curr_path_dist > path_dist:
+                    curr_path = tmp_curr_path.copy()
+                    curr_path_dist = tmp_curr_path_dist
+                    new_point_radius_list = tmp_new_point_radius_list.copy()
+                    curr_stop_points = tmp_curr_stop_points.copy()
+                    continue
 
                 # Recalculate groups based on what we removed and go in recursively
                 for group_lm in group[1]:
@@ -306,16 +319,24 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
 
                 if not groups_alt:
                     # Calculate path from last point to start point
-                    # print(curr_point)
-                    path_to_start, cost_to_start = extra_funcs_hash["Calc Dist"](curr_point, start_point)[curr_path[0]]
-                    curr_path += path_to_start[1:]
-                    # print(curr_path)
+                    path_to_start, cost_to_start = extra_funcs_hash["Calc Dist"](next_point, start_point)[curr_path[0]]
+                    if len(path_to_start) > 1:
+                        curr_path += path_to_start[1:]
+                    else:
+                        curr_path += path_to_start
+
+                    curr_path_dist += cost_to_start
                     if curr_path_dist < path_dist:
                         path_dist = curr_path_dist
-                        path = curr_path
-                    continue
+                        path = curr_path.copy()
+                        stop_points = curr_stop_points.copy()
+                    return
 
-                findPathRecursively(groups_alt.copy(), curr_path.copy(), curr_path_dist, new_point_radius_list.copy(), curr_point)
+                findPathRecursively(groups_alt.copy(), curr_path.copy(), curr_path_dist, new_point_radius_list.copy(), next_point, curr_stop_points)
+                curr_path = tmp_curr_path.copy()
+                curr_path_dist = tmp_curr_path_dist
+                new_point_radius_list = tmp_new_point_radius_list.copy()
+                curr_stop_points = tmp_curr_stop_points.copy()
 
         findPathRecursively(groups)
         # Update path based on stop points
