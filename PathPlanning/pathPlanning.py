@@ -312,7 +312,8 @@ def dynamicTravelingSalesman(start_point, point_radius_list, mapping_function, a
                 for group_lm in group[1]:
                     for point in new_point_radius_list:
                         point_obj = Point(point[0], point[1])
-                        if point_obj.within(group_lm):
+                        circle = point_obj.buffer(point[2])
+                        if circle.within(group_lm):
                             new_point_radius_list.remove(point)
                 groups_alt = GeoHelpers.getShapeGroups(new_point_radius_list)
                 groups_alt += GeoHelpers.getCirclesNotInIntersections(new_point_radius_list)
