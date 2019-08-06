@@ -64,8 +64,9 @@ simulation_config = {
 
 path_planning_algorithm_config = {
     "Grid Size" : 100,
-    "Grid Coeff" : 0.2,
-    "Relative Dist To Center" : 0.6
+    "Grid Coeff" : 0.5,
+    "Relative Dist To Center" : 0.6,
+    "Minimize Clusters" : "No"
 }
 
 js_config = {

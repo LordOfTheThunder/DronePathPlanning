@@ -1,7 +1,7 @@
 from shapely.geometry import Point, LineString, mapping
 import numpy as np
 from operator import itemgetter
-from MainConfig import geo_config
+from MainConfig import geo_config, path_planning_algorithm_config
 
 def euclideanDist(first_point, second_point):
     return ((first_point[0] - second_point[0])**2 + (first_point[1] - second_point[1])**2)**0.5
@@ -51,25 +51,79 @@ def getClosestPointFromPointToShape(point, shape):
     return closest_point
 
 def getShapeGroups(point_radius_list):
-    pols = list(getCircleObjectsFromList(point_radius_list))
-    intersections = []  # List of tuples
-    for pol_1 in pols:
-        for pol_2 in pols:
-            if pol_1 is pol_2 or not pol_1.intersects(pol_2):
-                continue
-            curr_int = pol_1.intersection(pol_2)
-            # Check if we already have an intersection which takes this
-            exists = False
-            for s in range(len(intersections)):
-                if curr_int.intersects(intersections[s][0]):
-                    intersections[s] = [curr_int.intersection(intersections[s][0]), intersections[s][1] + [pol_2]]
-                    pols.remove(pol_1)
-                    pols.remove(pol_2)
-                    exists = True
-            if not exists:
-                intersections.append([curr_int, [pol_1, pol_2]])
 
-    return intersections
+    def getShapeGroupsNaive(point_radius_list):
+        pols = list(getCircleObjectsFromList(point_radius_list))
+        intersections = []  # List of tuples
+        for pol_1 in pols:
+            for pol_2 in pols:
+                if pol_1 is pol_2 or not pol_1.intersects(pol_2):
+                    continue
+                curr_int = pol_1.intersection(pol_2)
+                # Check if we already have an intersection which takes this
+                exists = False
+                for s in range(len(intersections)):
+                    if curr_int.intersects(intersections[s][0]):
+                        intersections[s] = [curr_int.intersection(intersections[s][0]), intersections[s][1]]
+                        try:
+                            pols.remove(pol_1)
+                            intersections[s][1] += [pol_1]
+                        except ValueError:
+                            pass
+                        try:
+                            pols.remove(pol_2)
+                            intersections[s][1] += [pol_2]
+                        except ValueError:
+                            pass
+                        exists = True
+                if not exists:
+                    intersections.append([curr_int, [pol_1, pol_2]])
+                    try:
+                        pols.remove(pol_1)
+                    except ValueError:
+                        pass
+                    try:
+                        pols.remove(pol_2)
+                    except ValueError:
+                        pass
+
+        return intersections
+
+    perms = []
+    def getAllPointPermutations(point_list):
+        def swap(list, a, b):
+            list[a], list[b] = list[b], list[a]
+            return list
+
+        def permute(point_list, l, r):
+            if r == l:
+                perms.append(point_list.copy())
+            else:
+                for i in range(l, r + 1):
+                    point_list = swap(point_list, l, i)
+                    permute(point_list, l + 1, r)
+                    point_list = swap(point_list, l, i)
+
+        return permute(point_list, 0, len(point_list) - 1)
+
+    def getShapeGroupsMinimizeClusters():
+        getAllPointPermutations(point_radius_list)
+        lowest = float("inf")
+        lowest_intersections = []
+        for perm in perms:
+            intersections = getShapeGroupsNaive(perm)
+            if len(intersections) < lowest:
+                lowest = len(intersections)
+                lowest_intersections = intersections.copy()
+            if lowest == 1:
+                return intersections
+
+        return lowest_intersections
+
+    if path_planning_algorithm_config["Minimize Clusters"] == "No":
+        return getShapeGroupsNaive(point_radius_list)
+    return getShapeGroupsMinimizeClusters()
+
 
 def getIntersectionRepresentativePointsFromCircles(point_radius_list):
     shape_groups = getShapeGroups(point_radius_list)
